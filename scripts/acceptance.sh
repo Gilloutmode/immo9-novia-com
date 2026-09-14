@@ -215,7 +215,7 @@ try:
 except up.RemoteRejected:
     pass
 PY
-tr_ "--preview et --resolve incompatibles" python3 skills/novia-publish/scripts/publish.py "$ID5" --preview --resolve linkedin=published
+tf "--preview et --resolve incompatibles (refusé sans mutation)" python3 skills/novia-publish/scripts/publish.py "$ID5" --preview --resolve linkedin=published
 t "résolutions multiples : une invalide, aucune mutation" bash -c "! python3 skills/novia-publish/scripts/publish.py '$ID5' --resolve linkedin=published --resolve instagram=published >/dev/null 2>&1 && python3 -c \"import json; m=json.load(open('outbox/$ID5/manifest.json')); assert m['publication']['results'][0]['state']=='unknown'\""
 t "refus explicite : aucune tentative conservée, nouvel essai autorisé" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID6/manifest.json')); assert not m['publication']['results']\""
 ID2="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test calibration")"
