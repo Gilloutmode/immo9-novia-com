@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _http import require_env, request_json  # noqa: E402
+from _http import require_env, request_json, PreflightError, RemoteRejected  # noqa: E402
 
 BASE = "https://api.brevo.com/v3"
 
@@ -21,13 +21,13 @@ def publish(channel, settings, caption, assets, manifest):
     key = require_env("BREVO_API_KEY")
     html = [a for a in assets if a.lower().endswith(".html")]
     if not html:
-        raise RuntimeError("newsletter : aucun fichier .html dans les assets de la pièce")
+        raise PreflightError("newsletter : aucun fichier .html dans les assets de la pièce")
     sender = settings.get("sender") or {}
     if not sender.get("email"):
-        raise RuntimeError("réglage manquant : sender.email")
+        raise PreflightError("réglage manquant : sender.email")
     lists = (settings.get("list_ids") or {}).get(manifest.get("persona"))
     if not lists:
-        raise RuntimeError("réglage manquant : list_ids.%s" % manifest.get("persona"))
+        raise PreflightError("réglage manquant : list_ids.%s" % manifest.get("persona"))
     with open(html[0], "r", encoding="utf-8") as f:
         content = f.read()
     subject = (manifest.get("captions", {}).get("subject") or manifest.get("title") or "IMMO9")[:120]

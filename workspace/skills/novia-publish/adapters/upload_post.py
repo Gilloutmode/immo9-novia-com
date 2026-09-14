@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _http import require_env, request_multipart  # noqa: E402
+from _http import require_env, request_multipart, PreflightError, RemoteRejected  # noqa: E402
 
 BASE = "https://api.upload-post.com/api"
 PLATFORM_MAP = {"instagram": "instagram", "facebook": "facebook", "linkedin": "linkedin", "youtube": "youtube", "tiktok": "tiktok"}
@@ -21,10 +21,10 @@ def publish(channel, settings, caption, assets, manifest):
     key = require_env("UPLOAD_POST_API_KEY")
     user = settings.get("user")
     if not user:
-        raise RuntimeError("réglage manquant : channels.%s.user (profil upload-post)" % channel)
+        raise PreflightError("réglage manquant : channels.%s.user (profil upload-post)" % channel)
     platform = settings.get("platform") or PLATFORM_MAP.get(channel)
     if not platform:
-        raise RuntimeError("plateforme upload-post inconnue pour le canal %s" % channel)
+        raise PreflightError("plateforme upload-post inconnue pour le canal %s" % channel)
     if not assets:
         endpoint = BASE + "/upload_text"
         fields = [("user", user), ("platform[]", platform), ("title", caption)]
@@ -56,7 +56,7 @@ def publish(channel, settings, caption, assets, manifest):
     if isinstance(entry, dict):
         if entry.get("success") is True:
             return {"state": "published", "id": entry.get("post_id") or entry.get("id") or res.get("request_id"), "url": entry.get("url"), "raw": res}
-        raise RuntimeError("upload-post : échec sur %s : %s" % (platform, entry.get("error") or entry.get("message") or entry))
+        raise RemoteRejected("upload-post : échec sur %s : %s" % (platform, entry.get("error") or entry.get("message") or entry))
     if res.get("success") is False or res.get("error"):
-        raise RuntimeError("upload-post : %s" % (res.get("error") or res.get("message") or res))
+        raise RemoteRejected("upload-post : %s" % (res.get("error") or res.get("message") or res))
     return {"state": "submitted", "id": res.get("request_id") or res.get("id"), "url": res.get("url"), "raw": res}

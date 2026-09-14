@@ -17,7 +17,7 @@ import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _http import require_env, request_json  # noqa: E402
+from _http import require_env, request_json, PreflightError, RemoteRejected  # noqa: E402
 
 GRAPH_VERSION = "v23.0"
 BASE = "https://graph.facebook.com/%s" % GRAPH_VERSION
@@ -26,7 +26,7 @@ BASE = "https://graph.facebook.com/%s" % GRAPH_VERSION
 def _public_url(settings, asset_path, manifest):
     base = settings.get("public_base_url")
     if not base:
-        raise RuntimeError("réglage manquant : public_base_url (Instagram exige une URL publique pour les médias, servis depuis export/)")
+        raise PreflightError("réglage manquant : public_base_url (Instagram exige une URL publique pour les médias, servis depuis export/)")
     marker = os.sep + "outbox" + os.sep + manifest["id"] + os.sep
     rel = asset_path.split(marker, 1)[1] if marker in asset_path else os.path.basename(asset_path)
     return base.rstrip("/") + "/" + urllib.parse.quote("%s/%s" % (manifest["id"], rel.replace(os.sep, "/")))
@@ -42,9 +42,9 @@ def publish(channel, settings, caption, assets, manifest):
     if channel == "instagram":
         ig = settings.get("ig_user_id")
         if not ig:
-            raise RuntimeError("réglage manquant : ig_user_id")
+            raise PreflightError("réglage manquant : ig_user_id")
         if not assets:
-            raise RuntimeError("Instagram exige au moins un média")
+            raise PreflightError("Instagram exige au moins un média")
         images = [a for a in assets if not a.lower().endswith((".mp4", ".mov"))]
         videos = [a for a in assets if a.lower().endswith((".mp4", ".mov"))]
         if videos:
@@ -62,7 +62,7 @@ def publish(channel, settings, caption, assets, manifest):
     if channel == "facebook":
         page = settings.get("fb_page_id")
         if not page:
-            raise RuntimeError("réglage manquant : fb_page_id")
+            raise PreflightError("réglage manquant : fb_page_id")
         images = [a for a in assets if not a.lower().endswith((".mp4", ".mov"))]
         if images:
             res = _post("%s/%s/photos" % (BASE, page), {"url": _public_url(settings, images[0], manifest), "message": caption, "access_token": token})
@@ -70,4 +70,4 @@ def publish(channel, settings, caption, assets, manifest):
             res = _post("%s/%s/feed" % (BASE, page), {"message": caption, "access_token": token})
         pid = res.get("post_id") or res.get("id")
         return {"state": "published" if pid else "submitted", "id": pid, "url": ("https://www.facebook.com/%s" % pid) if pid else None, "raw": res}
-    raise RuntimeError("canal non géré par meta_graph : %s" % channel)
+    raise PreflightError("canal non géré par meta_graph : %s" % channel)

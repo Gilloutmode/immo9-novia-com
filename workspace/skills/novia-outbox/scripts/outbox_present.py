@@ -40,8 +40,6 @@ def main():
             sys.exit("REFUS : fichiers déclarés mais absents : %s" % ", ".join(miss))
     if m["status"] in ("published", "rejected", "expired"):
         sys.exit("pièce %s en statut %s : ne peut plus être présentée" % (m["id"], m["status"]))
-    if args.score is not None:
-        m["quality"]["narrative_score"] = args.score
     if args.card_only:
         if not (args.card_id and args.card_chat_id):
             sys.exit("REFUS : --card-only exige --card-id et --card-chat-id.")
@@ -53,6 +51,8 @@ def main():
         write_json(path, m)
         print("%s : carte %s enregistrée dans le chat %s" % (m["id"], args.card_id, args.card_chat_id))
         return
+    if args.score is not None:
+        m["quality"]["narrative_score"] = args.score
     m["status"] = "presented" if args.stage == "go1" else "final_presented"
     m["presented_at"] = now_iso()
     m["is_test"] = bool(args.test) or bool(m.get("is_test"))

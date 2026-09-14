@@ -11,7 +11,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _http import require_env, request_json  # noqa: E402
+from _http import require_env, request_json, PreflightError, RemoteRejected  # noqa: E402
 
 LINKEDIN_VERSION = "202509"
 
@@ -34,12 +34,12 @@ def publish(channel, settings, caption, assets, manifest):
     token = require_env("LINKEDIN_ACCESS_TOKEN")
     owner = settings.get("organization_urn")
     if not owner:
-        raise RuntimeError("réglage manquant : organization_urn")
+        raise PreflightError("réglage manquant : organization_urn")
     body = {"author": owner, "commentary": caption, "visibility": "PUBLIC",
             "distribution": {"feedDistribution": "MAIN_FEED", "targetEntities": [], "thirdPartyDistributionChannels": []},
             "lifecycleState": "PUBLISHED", "isReshareDisabledByAuthor": False}
     if any(a.lower().endswith(".pdf") for a in assets):
-        raise RuntimeError("l'adaptateur linkedin natif ne gère pas les documents PDF ; utiliser upload_post (upload_document) ou publier le PDF manuellement")
+        raise PreflightError("l'adaptateur linkedin natif ne gère pas les documents PDF ; utiliser upload_post (upload_document) ou publier le PDF manuellement")
     images = [a for a in assets if a.lower().endswith((".png", ".jpg", ".jpeg"))]
     if images:
         image_urn = _upload_image(token, owner, images[0])

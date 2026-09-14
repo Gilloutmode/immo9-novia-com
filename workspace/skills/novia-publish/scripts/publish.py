@@ -21,20 +21,19 @@ from novia_common import find_workspace, load_manifest, write_json, now_iso, add
 TERMINAL_OK = {"published"}
 PENDING = {"submitted", "processing", "draft_remote"}
 UNKNOWN = {"attempt", "unknown"}  # un appel est peut-être parti : rien n'est rejoué avant vérification
-CERTAIN_FAILURES = (RuntimeError, ValueError, KeyError, FileNotFoundError)
+sys.path.insert(0, str(HERE.parent / "adapters"))
+from _http import PreflightError, RemoteRejected  # noqa: E402
 
 
 def is_certain_failure(e):
-    """Erreur survenue avant acceptation distante (config, fichier, refus 4xx) : la tentative peut être effacée."""
-    import urllib.error
-    if isinstance(e, urllib.error.HTTPError):
-        return 400 <= e.code < 500
-    return isinstance(e, CERTAIN_FAILURES) and not isinstance(e, TimeoutError)
+    """Seules deux preuves autorisent à effacer une tentative : rien n'est parti (PreflightError, fichier absent)
+    ou le serveur a explicitement refusé (RemoteRejected). Tout le reste est une issue inconnue."""
+    return isinstance(e, (PreflightError, RemoteRejected, FileNotFoundError))
 
 
 def trace_lines(ws, m, r):
-    """Écrit ledger et feed pour un résultat, de façon idempotente (référence unique)."""
-    ref = "réf %s@%s" % (r.get("idempotency_key", ""), r.get("at", "")[:19])
+    """Écrit ledger et feed pour un résultat et son état, de façon idempotente (référence unique par état)."""
+    ref = "réf %s@%s:%s" % (r.get("idempotency_key", ""), r.get("at", "")[:19], r.get("state", ""))
     ledger = ws / "learning" / "CONTENT_LEDGER.md"
     feed = ws / "learning" / "FEED_STATE.md"
     label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire", "unknown": "issue inconnue (à vérifier chez le prestataire)"}.get(r["state"], r["state"])
@@ -101,9 +100,54 @@ def main():
                 pass
 
 
+def repair_traces(ws, m):
+    for r in m["publication"].get("results", []):
+        if r.get("state") not in ("attempt", "simulated"):
+            trace_lines(ws, m, r)
+
+
+def recompute_status(m, approved_channels, by):
+    states = {}
+    for r in m["publication"]["results"]:
+        states[r["channel"]] = r.get("state")
+    if all(states.get(ch) in TERMINAL_OK for ch in approved_channels):
+        if m["status"] != "published":
+            m["status"] = "published"
+            add_history(m, "published", by=by)
+    elif any(states.get(ch) in UNKNOWN for ch in approved_channels):
+        m["status"] = "approved"  # une issue inconnue laisse la pièce approuvée mais bloquée jusqu'à résolution
+    elif any(states.get(ch) in PENDING for ch in approved_channels):
+        m["status"] = "submitted"
+
+
 def _run(ws, contract, args, lock):
     path, m = load_manifest(ws, args.piece_id)
     channels_cfg = read_json(ws / "state" / "channels.json", {"channels": {}}).get("channels", {})
+    go2_early = m["approvals"].get("go2") or {}
+    approved_early = list(go2_early.get("channels") or m.get("channels") or [m["channel_primary"]])
+    if not args.preview:
+        repair_traces(ws, m)  # les traces d'un résultat déjà obtenu se réparent avant tout contrôle
+    if args.resolve:  # confirmation d'un effet passé : indépendante de la validité d'un nouvel envoi
+        for item in args.resolve:
+            ch_r, _, st = item.partition("=")
+            if st not in ("published", "failed"):
+                sys.exit("--resolve attend CANAL=published ou CANAL=failed")
+            hit = False
+            for r in m["publication"]["results"]:
+                if r.get("channel") == ch_r and r.get("state") in UNKNOWN:
+                    r["state"] = st
+                    r["resolved_at"] = now_iso()
+                    hit = True
+                    if st == "published":
+                        trace_lines(ws, m, r)
+            if not hit:
+                sys.exit("--resolve : aucune tentative d'issue inconnue pour %s" % ch_r)
+            add_history(m, "resolved", by="humain", note="%s=%s" % (ch_r, st))
+        recompute_status(m, approved_early, str(go2_early.get("by")))
+        write_json(path, m)
+        print("résolution enregistrée : %s ; statut %s" % (", ".join(args.resolve), m["status"]))
+        if all(x.endswith("=published") for x in args.resolve):
+            return
     approved_channels = list((m["approvals"].get("go2") or {}).get("channels") or m.get("channels") or [m["channel_primary"]])
     targets = args.channel or approved_channels
 
@@ -119,6 +163,10 @@ def _run(ws, contract, args, lock):
         sys.exit("REFUS : onboarding en %s ; aucune publication avant complete." % onboarding_status(ws))
     if m.get("is_test"):
         sys.exit("REFUS : pièce test de calibration, jamais publiable.")
+    if m["status"] == "published":
+        write_json(path, m)
+        print("%s : déjà publiée sur tous les canaux approuvés ; traces vérifiées, rien n'est renvoyé." % m["id"])
+        return
     if m["status"] not in ("approved", "submitted") or not m["approvals"].get("go2"):
         sys.exit("REFUS : pièce %s sans « Go publie » enregistré (statut %s)." % (m["id"], m["status"]))
     go2 = m["approvals"]["go2"]
@@ -135,15 +183,6 @@ def _run(ws, contract, args, lock):
     if extra:
         sys.exit("REFUS : canal non approuvé : %s (approuvés : %s)." % (", ".join(extra), ", ".join(approved_channels)))
 
-    for item in args.resolve:  # vérification manuelle d'une issue inconnue
-        ch_r, _, st = item.partition("=")
-        if st not in ("published", "failed"):
-            sys.exit("--resolve attend CANAL=published ou CANAL=failed")
-        for r in m["publication"].get("results", []):
-            if r.get("channel") == ch_r and r.get("state") in UNKNOWN:
-                r["state"] = st
-                r["resolved_at"] = now_iso()
-        write_json(path, m)
     targets = list(dict.fromkeys(targets))  # dédoublonnage, ordre conservé
     results_prev = m["publication"].get("results", [])
     done = {r["channel"] for r in results_prev if r.get("state") in TERMINAL_OK}
@@ -206,19 +245,8 @@ def _run(ws, contract, args, lock):
             write_json(path, m)  # chaque résultat est sauvegardé immédiatement
             trace_lines(ws, m, res)
     if not args.dry_run:
-        for r in m["publication"]["results"]:  # réparation des traces manquantes (reprise après incident d'écriture)
-            if r.get("state") not in ("attempt", "simulated"):
-                trace_lines(ws, m, r)
-        states = {}
-        for r in m["publication"]["results"]:
-            states[r["channel"]] = r.get("state")
-        if all(states.get(ch) in TERMINAL_OK for ch in approved_channels):
-            if m["status"] != "published":
-                m["status"] = "published"
-                add_history(m, "published", by=str(go2.get("by")))
-        else:
-            m["status"] = "submitted"
-            add_history(m, "submitted", by=str(go2.get("by")), note=str(states))
+        repair_traces(ws, m)
+        recompute_status(m, approved_channels, str(go2.get("by")))
         write_json(path, m)
     else:
         add_history(m, "publish_dry_run", by="agent")

@@ -163,11 +163,47 @@ PY
 tr_ "réponse perdue après envoi : échec rapporté, issue inconnue conservée" python3 skills/novia-publish/scripts/publish.py "$ID3"
 t "issue inconnue : tentative conservée dans le manifest et tracée" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID3/manifest.json')); r=m['publication']['results']; assert len(r)==1 and r[0]['state']=='unknown'\" && grep -q 'issue inconnue' learning/CONTENT_LEDGER.md"
 tr_ "reprise bloquée tant que l'issue est inconnue" python3 skills/novia-publish/scripts/publish.py "$ID3"
-t "après vérification manuelle (--resolve linkedin=published) : pièce publiée sans renvoi" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID3' --resolve linkedin=published >/dev/null && python3 -c \"import json; m=json.load(open('outbox/$ID3/manifest.json')); assert m['status']=='published' and len(m['publication']['results'])==1\""
+python3 - "outbox/$ID3/manifest.json" <<'PY'
+import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["approvals"]["go2"]["at"]="2020-01-01T00:00:00+00:00"; json.dump(m,open(p,"w"))
+PY
+t "résolution acceptée même si le Go 2 a expiré (confirmation d'un effet passé), pièce publiée sans renvoi" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID3' --resolve linkedin=published >/dev/null && python3 -c \"import json; m=json.load(open('outbox/$ID3/manifest.json')); assert m['status']=='published' and len(m['publication']['results'])==1\" && grep -q ':published' learning/CONTENT_LEDGER.md"
+t "pièce publiée : une reprise ne renvoie rien et répare ses traces" bash -c "sed -i.bak '/:published/d' learning/CONTENT_LEDGER.md && python3 skills/novia-publish/scripts/publish.py '$ID3' | grep -q 'déjà publiée' && grep -q ':published' learning/CONTENT_LEDGER.md"
+ID5="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test réponse illisible")"
+set_caption "outbox/$ID5/manifest.json" "Test. Source : https://example.org"
+python3 skills/novia-outbox/scripts/outbox_present.py "$ID5" --stage final --score 90 >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py "$ID5" --card-only --card-id 9 --card-chat-id -1001234567890 >/dev/null
+"${APPROVE[@]}" "$ID5" --stage go2 --by 123456789 --text "Go publie" --reply-to 9 --message-id 10 --chat-id -1001234567890 >/dev/null
+cat > skills/novia-publish/adapters/fake_badjson.py <<'PY'
+import json
+def publish(channel, settings, caption, assets, manifest):
+    json.loads("{pas du json")  # réponse reçue mais illisible : ValueError après un envoi possible
+PY
+python3 - <<'PY'
+import json; c=json.load(open("state/channels.json")); c["channels"]["linkedin"]={"adapter":"fake_badjson"}; json.dump(c,open("state/channels.json","w"))
+PY
+tr_ "réponse illisible après envoi : échec rapporté" python3 skills/novia-publish/scripts/publish.py "$ID5"
+t "réponse illisible = issue inconnue conservée, renvoi bloqué" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID5/manifest.json')); r=m['publication']['results']; assert len(r)==1 and r[0]['state']=='unknown'\" && ! python3 skills/novia-publish/scripts/publish.py '$ID5' >/dev/null 2>&1"
+cat > skills/novia-publish/adapters/fake_rejected.py <<'PY'
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _http import RemoteRejected
+def publish(channel, settings, caption, assets, manifest):
+    raise RemoteRejected("HTTP 400 : légende trop longue")
+PY
+ID6="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test refus serveur")"
+set_caption "outbox/$ID6/manifest.json" "Test. Source : https://example.org"
+python3 skills/novia-outbox/scripts/outbox_present.py "$ID6" --stage final --score 90 >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py "$ID6" --card-only --card-id 11 --card-chat-id -1001234567890 >/dev/null
+"${APPROVE[@]}" "$ID6" --stage go2 --by 123456789 --text "Go publie" --reply-to 11 --message-id 12 --chat-id -1001234567890 >/dev/null
+python3 - <<'PY'
+import json; c=json.load(open("state/channels.json")); c["channels"]["linkedin"]={"adapter":"fake_rejected"}; json.dump(c,open("state/channels.json","w"))
+PY
+tr_ "refus explicite du serveur : échec certain rapporté" python3 skills/novia-publish/scripts/publish.py "$ID6"
+t "refus explicite : aucune tentative conservée, nouvel essai autorisé" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID6/manifest.json')); assert not m['publication']['results']\""
 ID2="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test calibration")"
 set_caption "outbox/$ID2/manifest.json" "Test. Source : https://example.org"
-python3 skills/novia-outbox/scripts/outbox_present.py "$ID2" --stage final --score 90 --test --card-id 1 >/dev/null
-tr_ "pièce test de calibration jamais approuvable pour publication" "${APPROVE[@]}" "$ID2" --stage go2 --by 123456789 --text "Go publie" --reply-to 1 --message-id 2 --chat-id -1001234567890
+t "pièce test de calibration présentée et marquée is_test" bash -c "python3 skills/novia-outbox/scripts/outbox_present.py '$ID2' --stage final --score 90 --test >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py '$ID2' --card-only --card-id 1 --card-chat-id -1001234567890 >/dev/null && python3 -c \"import json; assert json.load(open('outbox/$ID2/manifest.json'))['is_test'] is True\""
+t "pièce test : Go publie refusé pour ce motif précis" bash -c "out=\$(python3 skills/novia-outbox/scripts/outbox_approve.py '$ID2' --stage go2 --by 123456789 --text 'Go publie' --reply-to 1 --message-id 2 --chat-id -1001234567890 2>&1); [ \$? -ne 0 ] && echo \"\$out\" | grep -q 'pièce test'"
+t "formule « publie-le » acceptée (Go 1 sur une pièce présentée)" bash -c "ID4=\$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title T4) && python3 skills/novia-outbox/scripts/outbox_present.py \"\$ID4\" --stage go1 >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py \"\$ID4\" --card-only --card-id 5 --card-chat-id -1001234567890 >/dev/null && python3 skills/novia-outbox/scripts/outbox_approve.py \"\$ID4\" --stage go1 --by 123456789 --text 'Publie-le.' --reply-to 5 --message-id 6 --chat-id -1001234567890"
 echo "== Contrôles éditoriaux"
 t "légende conforme acceptée" python3 skills/novia-editorial/scripts/caption_check.py --channel linkedin --persona P1 --text "Vous achetez à Toulouse ? Selon service-public.fr (2026), le PTZ finance une partie du prix."
 tf "promesse de rendement refusée" python3 skills/novia-editorial/scripts/caption_check.py --channel linkedin --persona P2 --text "Rendement garanti de 5 % selon nous."

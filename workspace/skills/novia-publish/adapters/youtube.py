@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _http import require_env, request_json  # noqa: E402
+from _http import require_env, request_json, PreflightError, RemoteRejected  # noqa: E402
 
 
 def _access_token():
@@ -31,7 +31,7 @@ def _access_token():
 def publish(channel, settings, caption, assets, manifest):
     videos = [a for a in assets if a.lower().endswith((".mp4", ".mov"))]
     if not videos:
-        raise RuntimeError("YouTube exige un fichier vidéo")
+        raise PreflightError("YouTube exige un fichier vidéo")
     token = _access_token()
     title = (manifest.get("title") or "Vidéo IMMO9")[:100]
     meta = {"snippet": {"title": title, "description": caption, "categoryId": settings.get("category_id", "22")},
