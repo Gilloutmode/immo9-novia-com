@@ -21,6 +21,17 @@ def main():
     args = ap.parse_args()
     ws = find_workspace()
     path, m = load_manifest(ws, args.piece_id)
+    if args.card_only:
+        if not (args.card_id and args.card_chat_id):
+            sys.exit("REFUS : --card-only exige --card-id et --card-chat-id.")
+        if m["status"] not in ("presented", "final_presented"):
+            sys.exit("REFUS : aucune présentation en cours (statut %s)." % m["status"])
+        m["card_message_id"] = str(args.card_id)
+        m["card_chat_id"] = str(args.card_chat_id)
+        add_history(m, "card_recorded", by="agent", note="%s/%s" % (args.card_chat_id, args.card_id))
+        write_json(path, m)
+        print("%s : carte %s enregistrée dans le chat %s" % (m["id"], args.card_id, args.card_chat_id))
+        return
     contract = load_contract(ws)
     allowed_from = contract.get("onboarding", {}).get("production_allowed_from", "act4_calibration")
     if onboarding_rank(ws) < onboarding_rank(ws, allowed_from):
@@ -40,17 +51,6 @@ def main():
             sys.exit("REFUS : fichiers déclarés mais absents : %s" % ", ".join(miss))
     if m["status"] in ("published", "rejected", "expired"):
         sys.exit("pièce %s en statut %s : ne peut plus être présentée" % (m["id"], m["status"]))
-    if args.card_only:
-        if not (args.card_id and args.card_chat_id):
-            sys.exit("REFUS : --card-only exige --card-id et --card-chat-id.")
-        if m["status"] not in ("presented", "final_presented"):
-            sys.exit("REFUS : aucune présentation en cours (statut %s)." % m["status"])
-        m["card_message_id"] = str(args.card_id)
-        m["card_chat_id"] = str(args.card_chat_id)
-        add_history(m, "card_recorded", by="agent", note="%s/%s" % (args.card_chat_id, args.card_id))
-        write_json(path, m)
-        print("%s : carte %s enregistrée dans le chat %s" % (m["id"], args.card_id, args.card_chat_id))
-        return
     if args.score is not None:
         m["quality"]["narrative_score"] = args.score
     m["status"] = "presented" if args.stage == "go1" else "final_presented"
