@@ -49,6 +49,10 @@ state = os.environ["FAKE_CRON_STATE"]; a = sys.argv[1:]
 jobs = json.load(open(state)) if os.path.exists(state) else []
 def save(): json.dump(jobs, open(state, "w"))
 if a[:2] == ["cron", "list"]:
+    if os.environ.get("FAKE_CRON_DROP_FINAL"):  # simule une disparition des jobs à la 3e lecture
+        c = int(os.environ.get("FAKE_CRON_CALLS", "0")) + 1; os.environ["FAKE_CRON_CALLS"] = str(c)
+        cnt = state + ".calls"; n = int(open(cnt).read()) + 1 if os.path.exists(cnt) else 1; open(cnt, "w").write(str(n))
+        if n >= 3: print(json.dumps({"jobs": []})); sys.exit(0)
     print(json.dumps({"jobs": jobs if "--all" in a else [j for j in jobs if j["enabled"]]})); sys.exit(0)
 if a[:2] == ["cron", "add"]:
     key = a[a.index("--declaration-key") + 1]; name = a[a.index("--name") + 1]
@@ -67,6 +71,7 @@ t "déclaration : 12 jobs créés désactivés, une commande par job" bash -c "O
 t "redéclaration : aucun doublon" bash -c "OPENCLAW='$T/bin/openclaw' python3 '$R/crons/install_crons.py' >/dev/null && python3 -c \"import json; assert len(json.load(open('$FAKE_CRON_STATE')))==12\""
 t "--enable-p1 : 7 jobs actifs, 5 désactivés, retrouvés malgré leur état" bash -c "OPENCLAW='$T/bin/openclaw' python3 '$R/crons/install_crons.py' --enable-p1 >/dev/null && python3 -c \"import json; j=json.load(open('$FAKE_CRON_STATE')); assert sum(1 for x in j if x['enabled'])==7\""
 t "--disable-all : 0 actif" bash -c "OPENCLAW='$T/bin/openclaw' python3 '$R/crons/install_crons.py' --disable-all >/dev/null && python3 -c \"import json; j=json.load(open('$FAKE_CRON_STATE')); assert sum(1 for x in j if x['enabled'])==0\""
+tf "job disparu à la vérification finale : échec signalé" bash -c "OPENCLAW='$T/bin/openclaw' FAKE_CRON_DROP_FINAL=1 python3 '$R/crons/install_crons.py' --enable-p1"
 echo "== Verrou d'onboarding et présentation"
 ID="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test" --source https://example.org)"
 tr_ "présentation refusée avant l'acte 4" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --stage final --score 90
@@ -81,7 +86,9 @@ tr_ "package final refusé avec un fichier déclaré absent" python3 skills/novi
 python3 - "outbox/$ID/manifest.json" <<'PY'
 import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["assets"]=[]; json.dump(m,open(p,"w"))
 PY
-t "présentation du package final (score 90, conformité, légende, carte 4242)" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --stage final --score 90 --card-id 4242
+tr_ "carte refusée sans son chat" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --stage final --score 90 --card-id 4242
+t "présentation du package final (score 90, conformité, légende)" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --stage final --score 90
+t "carte enregistrée après envoi (chat du groupe, message 4242)" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --card-only --card-id 4242 --card-chat-id -1001234567890
 echo "== Approbation"
 OK=(--reply-to 4242 --message-id 4300 --chat-id -1001234567890)
 tr_ "refusée : personne non autorisée" "${APPROVE[@]}" "$ID" --stage go2 --by 999 --text "Go publie" "${OK[@]}"
@@ -96,6 +103,17 @@ tr_ "refusée : mot noyé dans une phrase" "${APPROVE[@]}" "$ID" --stage go2 --b
 tr_ "refusée : sans identifiants Telegram" "${APPROVE[@]}" "$ID" --stage go2 --by 123456789 --text "Go publie"
 tr_ "refusée : réponse à un autre message que la carte" "${APPROVE[@]}" "$ID" --stage go2 --by 123456789 --text "Go publie" --reply-to 9999 --message-id 4300 --chat-id -1001234567890
 tr_ "refusée : chat inconnu" "${APPROVE[@]}" "$ID" --stage go2 --by 123456789 --text "Go publie" --reply-to 4242 --message-id 4300 --chat-id 55555
+tr_ "refusée : même numéro de message mais autre chat autorisé (DM)" "${APPROVE[@]}" "$ID" --stage go2 --by 123456789 --text "Go publie" --reply-to 4242 --message-id 4300 --chat-id 123456789
+python3 - "outbox/$ID/manifest.json" <<'PY'
+import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["captions"]["subject"]="Objet B"; json.dump(m,open(p,"w"))
+PY
+tr_ "refusée : objet de newsletter modifié après présentation" "${APPROVE[@]}" "$ID" --stage go2 --by 123456789 --text "Go publie" "${OK[@]}"
+python3 - "outbox/$ID/manifest.json" <<'PY'
+import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["captions"].pop("subject",None); json.dump(m,open(p,"w"))
+PY
+t "formule du contrat avec trait d'union acceptée (Go 1 : « on part là-dessus »)" bash -c "python3 skills/novia-outbox/scripts/outbox_present.py '$ID' --stage go1 >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py '$ID' --card-only --card-id 4242 --card-chat-id -1001234567890 >/dev/null && python3 skills/novia-outbox/scripts/outbox_approve.py '$ID' --stage go1 --by 123456789 --text 'On part là-dessus' --reply-to 4242 --message-id 4301 --chat-id -1001234567890"
+t "nouvelle présentation : ancienne carte et approbations invalidées" bash -c "python3 skills/novia-outbox/scripts/outbox_present.py '$ID' --stage final --score 90 >/dev/null && python3 -c \"import json; m=json.load(open('outbox/$ID/manifest.json')); assert m['card_message_id'] is None and m['approvals']['go1'] is None\""
+t "carte enregistrée à nouveau" python3 skills/novia-outbox/scripts/outbox_present.py "$ID" --card-only --card-id 4242 --card-chat-id -1001234567890
 python3 - "outbox/$ID/manifest.json" <<'PY'
 import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["title"]="Titre modifié après présentation"; json.dump(m,open(p,"w"))
 PY
@@ -129,6 +147,23 @@ import json; c=json.load(open("state/channels.json")); c["channels"]["linkedin"]
 PY
 t "envoi accepté par le prestataire : statut submitted, résultat et ledger enregistrés" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID' >/dev/null && python3 -c \"import json; m=json.load(open('outbox/$ID/manifest.json')); assert m['status']=='submitted'; r=m['publication']['results']; assert len(r)==1 and r[0]['state']=='submitted' and r[0].get('idempotency_key')\" && grep -q 'soumise' learning/CONTENT_LEDGER.md"
 t "reprise : une cible en attente n'est pas resoumise" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID' | grep -q 'déjà soumis' && python3 -c \"import json; m=json.load(open('outbox/$ID/manifest.json')); assert len(m['publication']['results'])==1\""
+t "cible répétée sur la ligne de commande : un seul envoi" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID' --channel linkedin --channel linkedin | grep -c 'déjà soumis' | grep -qx 1"
+t "réparation des traces : ligne de ledger absente régénérée à la reprise" bash -c "sed -i.bak '/soumise/d' learning/CONTENT_LEDGER.md && python3 skills/novia-publish/scripts/publish.py '$ID' >/dev/null; grep -q 'soumise' learning/CONTENT_LEDGER.md"
+ID3="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test timeout")"
+set_caption "outbox/$ID3/manifest.json" "Test. Source : https://example.org"
+python3 skills/novia-outbox/scripts/outbox_present.py "$ID3" --stage final --score 90 >/dev/null && python3 skills/novia-outbox/scripts/outbox_present.py "$ID3" --card-only --card-id 7 --card-chat-id -1001234567890 >/dev/null
+"${APPROVE[@]}" "$ID3" --stage go2 --by 123456789 --text "Go publie" --reply-to 7 --message-id 8 --chat-id -1001234567890 >/dev/null
+cat > skills/novia-publish/adapters/fake_timeout.py <<'PY'
+def publish(channel, settings, caption, assets, manifest):
+    raise TimeoutError("réponse perdue après envoi")
+PY
+python3 - <<'PY'
+import json; c=json.load(open("state/channels.json")); c["channels"]["linkedin"]={"adapter":"fake_timeout"}; json.dump(c,open("state/channels.json","w"))
+PY
+tr_ "réponse perdue après envoi : échec rapporté, issue inconnue conservée" python3 skills/novia-publish/scripts/publish.py "$ID3"
+t "issue inconnue : tentative conservée dans le manifest et tracée" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID3/manifest.json')); r=m['publication']['results']; assert len(r)==1 and r[0]['state']=='unknown'\" && grep -q 'issue inconnue' learning/CONTENT_LEDGER.md"
+tr_ "reprise bloquée tant que l'issue est inconnue" python3 skills/novia-publish/scripts/publish.py "$ID3"
+t "après vérification manuelle (--resolve linkedin=published) : pièce publiée sans renvoi" bash -c "python3 skills/novia-publish/scripts/publish.py '$ID3' --resolve linkedin=published >/dev/null && python3 -c \"import json; m=json.load(open('outbox/$ID3/manifest.json')); assert m['status']=='published' and len(m['publication']['results'])==1\""
 ID2="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test calibration")"
 set_caption "outbox/$ID2/manifest.json" "Test. Source : https://example.org"
 python3 skills/novia-outbox/scripts/outbox_present.py "$ID2" --stage final --score 90 --test --card-id 1 >/dev/null

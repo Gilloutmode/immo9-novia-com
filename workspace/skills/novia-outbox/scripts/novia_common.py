@@ -78,8 +78,9 @@ def send_plan(manifest):
     for ch in channels:
         assets = [a.get("file", "") for a in manifest.get("assets", []) if not a.get("channels") or ch in a["channels"]]
         plan.append({"channel": ch, "caption": manifest.get("captions", {}).get(ch) or manifest.get("captions", {}).get("default") or "",
-                     "title": manifest.get("title", ""), "persona": manifest.get("persona"), "assets": assets,
-                     "ceiling": manifest.get("cost", {}).get("ceiling")})
+                     "subject": manifest.get("captions", {}).get("subject", ""), "title": manifest.get("title", ""),
+                     "persona": manifest.get("persona"), "assets": assets, "ceiling": manifest.get("cost", {}).get("ceiling")})
+    plan.append({"all_captions": manifest.get("captions", {})})  # toute légende envoyable, même non listée par canal
     return plan
 
 

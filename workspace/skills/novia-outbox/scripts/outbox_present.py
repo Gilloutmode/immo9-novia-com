@@ -14,7 +14,9 @@ def main():
     ap.add_argument("--stage", choices=["go1", "final"], default="final",
                     help="go1 = présentation du concept ; final = package final (défaut)")
     ap.add_argument("--score", type=int, default=None, help="score qualité narrative (0-100)")
-    ap.add_argument("--card-id", default=None, help="identifiant du message Telegram de la carte (à renseigner après envoi)")
+    ap.add_argument("--card-id", default=None, help="identifiant du message Telegram de la carte (à renseigner après envoi, avec --card-chat-id)")
+    ap.add_argument("--card-chat-id", default=None, help="identifiant du chat Telegram où la carte a été envoyée")
+    ap.add_argument("--card-only", action="store_true", help="n'enregistre que la carte d'une présentation déjà faite (pas de nouvelle présentation)")
     ap.add_argument("--test", action="store_true", help="pièce test de calibration (acte 4) : présentable, jamais publiable")
     args = ap.parse_args()
     ws = find_workspace()
@@ -40,11 +42,26 @@ def main():
         sys.exit("pièce %s en statut %s : ne peut plus être présentée" % (m["id"], m["status"]))
     if args.score is not None:
         m["quality"]["narrative_score"] = args.score
+    if args.card_only:
+        if not (args.card_id and args.card_chat_id):
+            sys.exit("REFUS : --card-only exige --card-id et --card-chat-id.")
+        if m["status"] not in ("presented", "final_presented"):
+            sys.exit("REFUS : aucune présentation en cours (statut %s)." % m["status"])
+        m["card_message_id"] = str(args.card_id)
+        m["card_chat_id"] = str(args.card_chat_id)
+        add_history(m, "card_recorded", by="agent", note="%s/%s" % (args.card_chat_id, args.card_id))
+        write_json(path, m)
+        print("%s : carte %s enregistrée dans le chat %s" % (m["id"], args.card_id, args.card_chat_id))
+        return
     m["status"] = "presented" if args.stage == "go1" else "final_presented"
     m["presented_at"] = now_iso()
     m["is_test"] = bool(args.test) or bool(m.get("is_test"))
-    if args.card_id:
-        m["card_message_id"] = str(args.card_id)
+    # nouvelle présentation : l'ancienne carte et les approbations antérieures ne valent plus
+    m["card_message_id"] = str(args.card_id) if args.card_id else None
+    m["card_chat_id"] = str(args.card_chat_id) if args.card_chat_id else None
+    if args.card_id and not args.card_chat_id:
+        sys.exit("REFUS : --card-id exige --card-chat-id (les identifiants de message Telegram sont propres à un chat).")
+    m["approvals"] = {"go1": None, "go2": None}
     if args.stage == "final":
         m["package_fingerprint"] = package_fingerprint(ws, m)
     add_history(m, "presented_%s" % args.stage, by="agent")

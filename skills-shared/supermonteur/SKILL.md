@@ -62,9 +62,22 @@ La voix est déjà dans le rendu (piste audio de la cam). **Livrable = le mp4 da
 - Robustesse : chemins échappés (pas d'injection ffprobe), texte HTML-échappé (accents/emoji préservés), timings triés/normalisés, `--accent` validé.
 - Personnalisable : couleur d'accent (`--accent`), police/taille/position dans `build.mjs`.
 
-## Outils ffmpeg annexes (ajout du 2026-09-08)
+## Gestes ffmpeg annexes (hors sous-titrage)
 
-Pour les gestes ffmpeg hors sous-titrage (coupe des silences, recadrage 9:16, loudness, export plateforme, vérification),
-s'appuyer sur `ffmpeg (commandes ci-dessous, aucun script externe requis)` (`silence.py`, `fit.py`/`export.py --preset reels`, `loudness.py`,
-`verify.py`), toujours avec `--json`. Les sous-titres restent produits ici (HyperFrames), pas par `caption.py`
-(filtre `subtitles` absent du ffmpeg de Gil au 2026-09-08).
+Aucun script externe n'est requis ; les commandes ci-dessous suffisent. Toujours vérifier le résultat avec `ffprobe`.
+
+```bash
+# Repérer les silences (seuil -35 dB, durée ≥ 0,5 s) pour couper les blancs
+ffmpeg -i rush.mp4 -af "silencedetect=noise=-35dB:d=0.5" -f null - 2>&1 | grep silence_
+# Couper un segment sans réencoder (début 00:00:03, durée 12 s)
+ffmpeg -ss 00:00:03 -t 12 -i rush.mp4 -c copy segment.mp4
+# Recadrage 9:16 centré (1080×1920)
+ffmpeg -i rush.mp4 -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1" -c:v libx264 -crf 20 -pix_fmt yuv420p -c:a aac -b:a 160k -movflags +faststart rush-9x16.mp4
+# Normalisation de niveau sonore (voix parlée, cible -16 LUFS, plafond -1,5 dBTP)
+ffmpeg -i in.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" -c:v copy -c:a aac -b:a 160k out.mp4
+# Export plateforme (Reels, Shorts, TikTok) : H.264 + AAC, GOP 2 s, faststart
+ffmpeg -i in.mp4 -c:v libx264 -preset medium -crf 20 -g 50 -pix_fmt yuv420p -c:a aac -b:a 160k -movflags +faststart reels.mp4
+# Vérification (dimensions, durée, débit)
+ffprobe -v error -show_entries stream=width,height,codec_name,bit_rate:format=duration -of default=noprint_wrappers=1 reels.mp4
+```
+Les sous-titres restent produits ici (HyperFrames), pas par le filtre `subtitles` de ffmpeg (absent de certaines distributions).

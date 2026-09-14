@@ -20,6 +20,28 @@ from novia_common import find_workspace, load_manifest, write_json, now_iso, add
 
 TERMINAL_OK = {"published"}
 PENDING = {"submitted", "processing", "draft_remote"}
+UNKNOWN = {"attempt", "unknown"}  # un appel est peut-être parti : rien n'est rejoué avant vérification
+CERTAIN_FAILURES = (RuntimeError, ValueError, KeyError, FileNotFoundError)
+
+
+def is_certain_failure(e):
+    """Erreur survenue avant acceptation distante (config, fichier, refus 4xx) : la tentative peut être effacée."""
+    import urllib.error
+    if isinstance(e, urllib.error.HTTPError):
+        return 400 <= e.code < 500
+    return isinstance(e, CERTAIN_FAILURES) and not isinstance(e, TimeoutError)
+
+
+def trace_lines(ws, m, r):
+    """Écrit ledger et feed pour un résultat, de façon idempotente (référence unique)."""
+    ref = "réf %s@%s" % (r.get("idempotency_key", ""), r.get("at", "")[:19])
+    ledger = ws / "learning" / "CONTENT_LEDGER.md"
+    feed = ws / "learning" / "FEED_STATE.md"
+    label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire", "unknown": "issue inconnue (à vérifier chez le prestataire)"}.get(r["state"], r["state"])
+    if not (ledger.exists() and ref in ledger.read_text(encoding="utf-8")):
+        append_line(ledger, "- %s · %s · %s · %s · %s · %s · %s · %s" % (r.get("at", "")[:10], m["id"], m["format"], m["persona"], r["channel"], label, r.get("url") or r.get("id") or "", ref))
+    if r["state"] in TERMINAL_OK and not (feed.exists() and ref in feed.read_text(encoding="utf-8")):
+        append_line(feed, "- %s · %s · %s · %s · %s · %s" % (r.get("at", "")[:10], r["channel"], m["format"], m["title"], r.get("url") or "", ref))
 
 
 def load_adapter(name):
@@ -54,6 +76,7 @@ def main():
     ap.add_argument("--channel", action="append", default=[], help="canal à publier (défaut : canaux approuvés)")
     ap.add_argument("--dry-run", action="store_true", help="simulation complète (adaptateur dryrun), aucun appel externe")
     ap.add_argument("--preview", action="store_true", help="montre ce qui serait envoyé, sans approbation requise, sans appel externe")
+    ap.add_argument("--resolve", action="append", default=[], metavar="CANAL=ÉTAT", help="après vérification manuelle chez le prestataire, fixe l'état d'une cible d'issue inconnue (published|failed)")
     args = ap.parse_args()
 
     ws = find_workspace()
@@ -112,9 +135,20 @@ def _run(ws, contract, args, lock):
     if extra:
         sys.exit("REFUS : canal non approuvé : %s (approuvés : %s)." % (", ".join(extra), ", ".join(approved_channels)))
 
+    for item in args.resolve:  # vérification manuelle d'une issue inconnue
+        ch_r, _, st = item.partition("=")
+        if st not in ("published", "failed"):
+            sys.exit("--resolve attend CANAL=published ou CANAL=failed")
+        for r in m["publication"].get("results", []):
+            if r.get("channel") == ch_r and r.get("state") in UNKNOWN:
+                r["state"] = st
+                r["resolved_at"] = now_iso()
+        write_json(path, m)
+    targets = list(dict.fromkeys(targets))  # dédoublonnage, ordre conservé
     results_prev = m["publication"].get("results", [])
     done = {r["channel"] for r in results_prev if r.get("state") in TERMINAL_OK}
     pending = {r["channel"]: r for r in results_prev if r.get("state") in PENDING}
+    unknown = {r["channel"]: r for r in results_prev if r.get("state") in UNKNOWN}
     results = []
     for ch in targets:
         if not args.dry_run and ch in done:
@@ -124,6 +158,9 @@ def _run(ws, contract, args, lock):
             r = pending[ch]
             print("%s : déjà soumis le %s (%s), en attente de confirmation chez le prestataire ; rien n'est renvoyé. Vérifier avec l'identifiant %s." % (ch, r.get("at"), r.get("state"), r.get("id")))
             continue
+        if not args.dry_run and ch in unknown:
+            r = unknown[ch]
+            sys.exit("REFUS : %s a une tentative d'issue inconnue (%s le %s). Vérifier chez le prestataire avec la référence %s, puis relancer avec --resolve %s=published ou --resolve %s=failed." % (ch, r.get("state"), r.get("at"), r.get("idempotency_key"), ch, ch))
         cfg = dict(channels_cfg.get(ch, {}))
         adapter_name = "dryrun" if args.dry_run else cfg.get("adapter")
         if not adapter_name:
@@ -144,10 +181,21 @@ def _run(ws, contract, args, lock):
             res = mod.publish(channel=ch, settings=cfg, caption=caption, assets=[str(a) for a in assets], manifest=m)
         except Exception as e:  # rapporté tel quel, sans repli silencieux
             if not args.dry_run:
-                m["publication"]["results"] = [r for r in m["publication"]["results"] if not (r.get("channel") == ch and r.get("state") == "attempt")]
-            add_history(m, "publish_failed", by="agent", note="%s: %s" % (ch, e))
+                if is_certain_failure(e):  # refus avant acceptation : la tentative est effacée
+                    m["publication"]["results"] = [r for r in m["publication"]["results"] if not (r.get("channel") == ch and r.get("state") == "attempt")]
+                    note = "échec certain"
+                else:  # réponse perdue après un envoi possible : issue inconnue, rejeu bloqué
+                    for r in m["publication"]["results"]:
+                        if r.get("channel") == ch and r.get("state") == "attempt":
+                            r["state"] = "unknown"
+                            r["error"] = str(e)[:200]
+                            trace_lines(ws, m, r)
+                    note = "issue inconnue, à vérifier chez le prestataire"
+            else:
+                note = "simulation"
+            add_history(m, "publish_failed", by="agent", note="%s: %s (%s)" % (ch, e, note))
             write_json(path, m)
-            sys.exit("ÉCHEC publication %s via %s : %s" % (ch, adapter_name, e))
+            sys.exit("ÉCHEC publication %s via %s : %s (%s)" % (ch, adapter_name, e, note))
         res = dict(res or {})
         state = "simulated" if adapter_name == "dryrun" else (res.get("state") or "submitted")
         res.update({"channel": ch, "adapter": adapter_name, "at": now_iso(), "state": state, "idempotency_key": cfg["idempotency_key"]})
@@ -156,12 +204,11 @@ def _run(ws, contract, args, lock):
             m["publication"]["results"] = [r for r in m["publication"]["results"] if not (r.get("channel") == ch and r.get("state") == "attempt")]
             m["publication"]["results"].append(res)
             write_json(path, m)  # chaque résultat est sauvegardé immédiatement
-            label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire"}.get(state, state)
-            append_line(ws / "learning" / "CONTENT_LEDGER.md",
-                        "- %s · %s · %s · %s · %s · %s · %s" % (now_iso()[:10], m["id"], m["format"], m["persona"], ch, label, res.get("url") or res.get("id") or ""))
-            if state in TERMINAL_OK:
-                append_line(ws / "learning" / "FEED_STATE.md", "- %s · %s · %s · %s · %s" % (now_iso()[:10], ch, m["format"], m["title"], res.get("url") or ""))
+            trace_lines(ws, m, res)
     if not args.dry_run:
+        for r in m["publication"]["results"]:  # réparation des traces manquantes (reprise après incident d'écriture)
+            if r.get("state") not in ("attempt", "simulated"):
+                trace_lines(ws, m, r)
         states = {}
         for r in m["publication"]["results"]:
             states[r["channel"]] = r.get("state")

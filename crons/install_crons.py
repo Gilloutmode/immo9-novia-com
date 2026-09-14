@@ -92,7 +92,9 @@ def main():
             key = "novia-com:" + j["key"]
             job = current.get(key)
             want = ("--enable-p1" in flags and j["palier"] == 1)
-            if job and bool(job.get("enabled")) != want:
+            if not job:
+                problems.append("job absent à la vérification finale : %s" % key)
+            elif bool(job.get("enabled")) != want:
                 problems.append("état inattendu pour %s : enabled=%s (attendu %s)" % (key, job.get("enabled"), want))
     print("Crons : %d créés, %d déjà présents. Vérifier : %s cron list --all --agent %s" % (created, kept, " ".join(OPENCLAW), AGENT))
     if problems:

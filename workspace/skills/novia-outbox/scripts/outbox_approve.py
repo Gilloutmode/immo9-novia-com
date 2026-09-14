@@ -54,9 +54,9 @@ def main():
     never = [norm(w) for w in val.get("never_approval", [])]
     if text in never:
         sys.exit("REFUS : « %s » ne vaut jamais approbation." % args.text)
-    core = re.sub(r"[^a-z0-9 ]", " ", text)
-    core = " ".join(core.split())
-    if core not in words:
+    canon = lambda t: " ".join(re.sub(r"[^a-z0-9 ]", " ", norm(t)).split())
+    core = canon(args.text)
+    if core not in [canon(w) for w in words]:
         sys.exit("REFUS : l'approbation doit être une formule complète et seule (%s), sans texte ajouté ; ici : « %s ». Les précisions (canal, horaire) se donnent dans un message séparé." % (", ".join(words), args.text))
     if not m.get("presented_at"):
         sys.exit("REFUS : la pièce n'a pas été présentée (outbox_present.py).")
@@ -72,8 +72,8 @@ def main():
         fp = package_fingerprint(ws, m)
         if m.get("package_fingerprint") != fp:
             sys.exit("REFUS : le package a changé depuis sa présentation (légendes, fichiers, canaux ou plafond) ; re-présenter.")
-        if not m.get("card_message_id"):
-            sys.exit("REFUS : identifiant de la carte non enregistré ; relancer outbox_present.py --stage final --card-id <id du message> avant toute approbation.")
+        if not m.get("card_message_id") or not m.get("card_chat_id"):
+            sys.exit("REFUS : carte non enregistrée ; relancer outbox_present.py <id> --card-only --card-id <message> --card-chat-id <chat> avant toute approbation.")
         if not args.reply_to or not args.message_id or not args.chat_id:
             sys.exit("REFUS : --reply-to, --message-id et --chat-id sont obligatoires pour Go 2 (identifiants Telegram du message d'approbation).")
         if str(args.reply_to) != str(m["card_message_id"]):
@@ -82,6 +82,8 @@ def main():
         allowed_chats = {str(channels_state.get("telegram_group_id", ""))} | {str(a.get("telegram_id")) for a in approvers}
         if str(args.chat_id) not in allowed_chats:
             sys.exit("REFUS : chat %s inconnu (ni le groupe Novia Com, ni un DM d'une personne autorisée)." % args.chat_id)
+        if str(args.chat_id) != str(m["card_chat_id"]):
+            sys.exit("REFUS : l'approbation vient du chat %s alors que la carte a été présentée dans le chat %s." % (args.chat_id, m["card_chat_id"]))
     if args.stage == "go1" and m["status"] not in ("presented", "final_presented"):
         sys.exit("REFUS : statut %s incompatible avec Go 1." % m["status"])
 
