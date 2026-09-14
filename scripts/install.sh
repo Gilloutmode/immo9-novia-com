@@ -54,8 +54,9 @@ PATCH="$(mktemp -t novia-patch.XXXXXX)"
 WITH_TG=""; [ -n "${NOVIA_TELEGRAM_BOT_TOKEN:-}" ] && WITH_TG="--with-telegram"
 python3 "$REPO/scripts/prepare_patch.py" "$REPO/config/openclaw.novia-com.patch.json5" "$WS" "$PATCH" $WITH_TG $ALLOW_EXAMPLES || fail "fragment non préparé"
 [ -n "$WITH_TG" ] || echo "NOVIA_TELEGRAM_BOT_TOKEN absent de cet environnement : le compte Telegram sera ajouté quand la variable existera (relancer install.sh)."
-$OPENCLAW config patch --file "$PATCH" --dry-run >/dev/null && echo "validation du fragment : OK" || fail "fragment refusé par OpenClaw (voir ci-dessus)"
-run $OPENCLAW config patch --file "$PATCH"
+REPLACE=(); [ -n "$WITH_TG" ] && REPLACE=(--replace-path "channels.telegram.accounts.novia-com.groups")
+$OPENCLAW config patch --file "$PATCH" "${REPLACE[@]}" --dry-run >/dev/null && echo "validation du fragment : OK" || fail "fragment refusé par OpenClaw (voir ci-dessus)"
+run $OPENCLAW config patch --file "$PATCH" "${REPLACE[@]}"
 rm -f "$PATCH"
 if [ -n "$WITH_TG" ]; then
   run $OPENCLAW agents bind --agent "$AGENT" --bind "telegram:$AGENT"

@@ -58,6 +58,27 @@ def main():
 
     ws = find_workspace()
     contract = load_contract(ws)
+    lock = ws / "outbox" / args.piece_id / ".publish.lock"
+    if not args.preview:
+        if not lock.parent.is_dir():
+            sys.exit("pièce inconnue : %s" % args.piece_id)
+        try:  # verrou AVANT toute lecture : deux exécutions ne peuvent pas partir de la même copie
+            fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, now_iso().encode("utf-8"))
+            os.close(fd)
+        except FileExistsError:
+            sys.exit("REFUS : publication déjà en cours pour %s (verrou %s)." % (args.piece_id, lock.name))
+    try:
+        _run(ws, contract, args, lock)
+    finally:
+        if not args.preview:
+            try:
+                lock.unlink()
+            except FileNotFoundError:
+                pass
+
+
+def _run(ws, contract, args, lock):
     path, m = load_manifest(ws, args.piece_id)
     channels_cfg = read_json(ws / "state" / "channels.json", {"channels": {}}).get("channels", {})
     approved_channels = list((m["approvals"].get("go2") or {}).get("channels") or m.get("channels") or [m["channel_primary"]])
@@ -91,70 +112,72 @@ def main():
     if extra:
         sys.exit("REFUS : canal non approuvé : %s (approuvés : %s)." % (", ".join(extra), ", ".join(approved_channels)))
 
-    lock = ws / "outbox" / m["id"] / ".publish.lock"
-    try:
-        fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        os.write(fd, now_iso().encode("utf-8"))
-        os.close(fd)
-    except FileExistsError:
-        sys.exit("REFUS : publication déjà en cours pour %s (verrou %s)." % (m["id"], lock.name))
-    try:
-        done = {r["channel"] for r in m["publication"].get("results", []) if r.get("state") in TERMINAL_OK}
-        results = []
-        for ch in targets:
-            if ch in done and not args.dry_run:
-                print("%s : déjà publié, ignoré" % ch)
-                continue
-            cfg = dict(channels_cfg.get(ch, {}))
-            adapter_name = "dryrun" if args.dry_run else cfg.get("adapter")
-            if not adapter_name:
-                sys.exit("REFUS : aucun adaptateur configuré pour le canal « %s » dans state/channels.json." % ch)
-            caption = m["captions"].get(ch) or m["captions"].get("default") or ""
-            assets = [ws / "outbox" / m["id"] / a["file"] for a in m.get("assets", []) if not a.get("channels") or ch in a["channels"]]
-            missing = [str(a) for a in assets if not a.exists()]
-            if missing:
-                sys.exit("REFUS : fichiers manquants : %s" % ", ".join(missing))
-            if adapter_name == "meta_graph":
-                cfg["exported_files"] = export_media(ws, m, [str(a) for a in assets])
-            mod = load_adapter(adapter_name)
-            try:
-                res = mod.publish(channel=ch, settings=cfg, caption=caption, assets=[str(a) for a in assets], manifest=m)
-            except Exception as e:  # rapporté tel quel, sans repli silencieux
-                add_history(m, "publish_failed", by="agent", note="%s: %s" % (ch, e))
-                write_json(path, m)
-                sys.exit("ÉCHEC publication %s via %s : %s" % (ch, adapter_name, e))
-            res = dict(res or {})
-            state = "simulated" if adapter_name == "dryrun" else (res.get("state") or "submitted")
-            res.update({"channel": ch, "adapter": adapter_name, "at": now_iso(), "state": state})
-            results.append(res)
-            if state != "simulated":
-                m["publication"]["results"].append(res)
-                write_json(path, m)  # chaque succès est sauvegardé immédiatement
-        if not args.dry_run:
-            states = {r["channel"]: r.get("state") for r in m["publication"]["results"]}
-            if all(states.get(ch) in TERMINAL_OK for ch in approved_channels):
+    results_prev = m["publication"].get("results", [])
+    done = {r["channel"] for r in results_prev if r.get("state") in TERMINAL_OK}
+    pending = {r["channel"]: r for r in results_prev if r.get("state") in PENDING}
+    results = []
+    for ch in targets:
+        if not args.dry_run and ch in done:
+            print("%s : déjà publié, ignoré" % ch)
+            continue
+        if not args.dry_run and ch in pending:
+            r = pending[ch]
+            print("%s : déjà soumis le %s (%s), en attente de confirmation chez le prestataire ; rien n'est renvoyé. Vérifier avec l'identifiant %s." % (ch, r.get("at"), r.get("state"), r.get("id")))
+            continue
+        cfg = dict(channels_cfg.get(ch, {}))
+        adapter_name = "dryrun" if args.dry_run else cfg.get("adapter")
+        if not adapter_name:
+            sys.exit("REFUS : aucun adaptateur configuré pour le canal « %s » dans state/channels.json." % ch)
+        caption = m["captions"].get(ch) or m["captions"].get("default") or ""
+        assets = [ws / "outbox" / m["id"] / a["file"] for a in m.get("assets", []) if not a.get("channels") or ch in a["channels"]]
+        missing = [str(a) for a in assets if not a.exists()]
+        if missing:
+            sys.exit("REFUS : fichiers manquants : %s" % ", ".join(missing))
+        if adapter_name == "meta_graph":
+            cfg["exported_files"] = export_media(ws, m, [str(a) for a in assets])
+        cfg["idempotency_key"] = "%s:%s:%s" % (m["id"], ch, (go2.get("package_fingerprint") or "")[:16])
+        mod = load_adapter(adapter_name)
+        if not args.dry_run:  # tentative persistée avant l'envoi : une reprise sait qu'un appel a pu partir
+            m["publication"]["results"].append({"channel": ch, "adapter": adapter_name, "at": now_iso(), "state": "attempt", "idempotency_key": cfg["idempotency_key"]})
+            write_json(path, m)
+        try:
+            res = mod.publish(channel=ch, settings=cfg, caption=caption, assets=[str(a) for a in assets], manifest=m)
+        except Exception as e:  # rapporté tel quel, sans repli silencieux
+            if not args.dry_run:
+                m["publication"]["results"] = [r for r in m["publication"]["results"] if not (r.get("channel") == ch and r.get("state") == "attempt")]
+            add_history(m, "publish_failed", by="agent", note="%s: %s" % (ch, e))
+            write_json(path, m)
+            sys.exit("ÉCHEC publication %s via %s : %s" % (ch, adapter_name, e))
+        res = dict(res or {})
+        state = "simulated" if adapter_name == "dryrun" else (res.get("state") or "submitted")
+        res.update({"channel": ch, "adapter": adapter_name, "at": now_iso(), "state": state, "idempotency_key": cfg["idempotency_key"]})
+        results.append(res)
+        if state != "simulated":
+            m["publication"]["results"] = [r for r in m["publication"]["results"] if not (r.get("channel") == ch and r.get("state") == "attempt")]
+            m["publication"]["results"].append(res)
+            write_json(path, m)  # chaque résultat est sauvegardé immédiatement
+            label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire"}.get(state, state)
+            append_line(ws / "learning" / "CONTENT_LEDGER.md",
+                        "- %s · %s · %s · %s · %s · %s · %s" % (now_iso()[:10], m["id"], m["format"], m["persona"], ch, label, res.get("url") or res.get("id") or ""))
+            if state in TERMINAL_OK:
+                append_line(ws / "learning" / "FEED_STATE.md", "- %s · %s · %s · %s · %s" % (now_iso()[:10], ch, m["format"], m["title"], res.get("url") or ""))
+    if not args.dry_run:
+        states = {}
+        for r in m["publication"]["results"]:
+            states[r["channel"]] = r.get("state")
+        if all(states.get(ch) in TERMINAL_OK for ch in approved_channels):
+            if m["status"] != "published":
                 m["status"] = "published"
                 add_history(m, "published", by=str(go2.get("by")))
-            else:
-                m["status"] = "submitted"
-                add_history(m, "submitted", by=str(go2.get("by")), note=str(states))
-            write_json(path, m)
-            for r in results:
-                label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire"}.get(r["state"], r["state"])
-                append_line(ws / "learning" / "CONTENT_LEDGER.md",
-                            "- %s · %s · %s · %s · %s · %s · %s" % (now_iso()[:10], m["id"], m["format"], m["persona"], r["channel"], label, r.get("url") or r.get("id") or ""))
-                if r["state"] in TERMINAL_OK:
-                    append_line(ws / "learning" / "FEED_STATE.md", "- %s · %s · %s · %s · %s" % (now_iso()[:10], r["channel"], m["format"], m["title"], r.get("url") or ""))
         else:
-            add_history(m, "publish_dry_run", by="agent")
-            write_json(path, m)
-        for r in results:
-            print("%s via %s [%s] : %s" % (r["channel"], r["adapter"], r["state"], r.get("url") or r.get("id") or r.get("message", "ok")))
-    finally:
-        try:
-            lock.unlink()
-        except FileNotFoundError:
-            pass
+            m["status"] = "submitted"
+            add_history(m, "submitted", by=str(go2.get("by")), note=str(states))
+        write_json(path, m)
+    else:
+        add_history(m, "publish_dry_run", by="agent")
+        write_json(path, m)
+    for r in results:
+        print("%s via %s [%s] : %s" % (r["channel"], r["adapter"], r["state"], r.get("url") or r.get("id") or r.get("message", "ok")))
 
 
 if __name__ == "__main__":

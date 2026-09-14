@@ -47,4 +47,15 @@ def publish(channel, settings, caption, assets, manifest):
         with urllib.request.urlopen(req, timeout=1800) as resp:
             res = json.loads(resp.read().decode("utf-8"))
     vid = res.get("id")
-    return {"state": "published" if vid else "submitted", "id": vid, "url": ("https://www.youtube.com/watch?v=%s" % vid) if vid else None, "raw": {"privacy": meta["status"]["privacyStatus"]}}
+    status = res.get("status") or {}
+    privacy = status.get("privacyStatus") or meta["status"]["privacyStatus"]
+    upload_status = status.get("uploadStatus")
+    if not vid:
+        raise RuntimeError("YouTube : réponse sans identifiant de vidéo : %s" % res)
+    if privacy != "public":
+        state = "draft_remote"  # dépôt privé ou non répertorié : rien n'est publié
+    elif upload_status == "processed":
+        state = "published"
+    else:
+        state = "processing"
+    return {"state": state, "id": vid, "url": "https://www.youtube.com/watch?v=%s" % vid, "raw": {"privacy": privacy, "uploadStatus": upload_status}}

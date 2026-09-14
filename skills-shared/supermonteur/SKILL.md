@@ -65,6 +65,6 @@ La voix est déjà dans le rendu (piste audio de la cam). **Livrable = le mp4 da
 ## Outils ffmpeg annexes (ajout du 2026-09-08)
 
 Pour les gestes ffmpeg hors sous-titrage (coupe des silences, recadrage 9:16, loudness, export plateforme, vérification),
-s'appuyer sur `(scripts ffmpeg non fournis, utiliser ffmpeg directement)` (`silence.py`, `fit.py`/`export.py --preset reels`, `loudness.py`,
+s'appuyer sur `ffmpeg (commandes ci-dessous, aucun script externe requis)` (`silence.py`, `fit.py`/`export.py --preset reels`, `loudness.py`,
 `verify.py`), toujours avec `--json`. Les sous-titres restent produits ici (HyperFrames), pas par `caption.py`
 (filtre `subtitles` absent du ffmpeg de Gil au 2026-09-08).

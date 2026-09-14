@@ -44,14 +44,19 @@ def publish(channel, settings, caption, assets, manifest):
             endpoint = BASE + "/upload_photos"
             fields = [("user", user), ("platform[]", platform), ("title", caption), ("caption", caption)]
             files = [("photos[]", a) for a in assets]
-    res = request_multipart(endpoint, fields, files, headers={"Authorization": "Apikey %s" % key})
-    # Réponse synchrone : succès par plateforme ; réponse asynchrone : request_id à suivre (Upload Status).
+    headers = {"Authorization": "Apikey %s" % key}
+    if settings.get("idempotency_key"):
+        headers["Idempotency-Key"] = settings["idempotency_key"]
+    res = request_multipart(endpoint, fields, files, headers=headers)
+    # Réponse asynchrone (request_id) : accepté, pas publié → submitted, à suivre avec l'API Upload Status.
+    if res.get("request_id") and not res.get("results"):
+        return {"state": "submitted", "id": res.get("request_id"), "url": None, "raw": res}
     per = res.get("results") or {}
-    ok = bool(res.get("success")) or (isinstance(per, dict) and any(isinstance(v, dict) and v.get("success") for v in per.values()))
-    state = "published" if ok else ("submitted" if res.get("request_id") else "submitted")
-    url = None
-    if isinstance(per, dict):
-        for v in per.values():
-            if isinstance(v, dict) and v.get("url"):
-                url = v["url"]
-    return {"state": state, "id": res.get("request_id") or res.get("id"), "url": url or res.get("url"), "raw": res}
+    entry = per.get(platform) if isinstance(per, dict) else None
+    if isinstance(entry, dict):
+        if entry.get("success") is True:
+            return {"state": "published", "id": entry.get("post_id") or entry.get("id") or res.get("request_id"), "url": entry.get("url"), "raw": res}
+        raise RuntimeError("upload-post : échec sur %s : %s" % (platform, entry.get("error") or entry.get("message") or entry))
+    if res.get("success") is False or res.get("error"):
+        raise RuntimeError("upload-post : %s" % (res.get("error") or res.get("message") or res))
+    return {"state": "submitted", "id": res.get("request_id") or res.get("id"), "url": res.get("url"), "raw": res}

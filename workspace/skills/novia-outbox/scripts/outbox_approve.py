@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Enregistre une approbation Go 1 ou Go 2 après vérification de l'auteur, du texte et du délai."""
 import argparse
+import re
 import sys
 import unicodedata
 from datetime import datetime, timedelta
@@ -40,7 +41,8 @@ def main():
         sys.exit("REFUS : message trop long pour valoir approbation (>300 caractères).")
     if "?" in args.text:
         sys.exit("REFUS : le message est une question, pas une approbation.")
-    conditions = (" si ", " quand ", " lorsque ", " apres ", " des que ", " une fois ", " sous reserve", " a condition", " mais ", " sauf ")
+    conditions = (" si ", " quand ", " lorsque ", " apres ", " des que ", " une fois ", " sous reserve", " a condition", " mais ", " sauf ",
+                  " a moins ", " moins que", " excepte", " hormis", " tant que", " seulement", " uniquement", " d'abord", " avant ", " puis ", " ensuite", " sinon")
     if any(c in (" " + text + " ") for c in conditions):
         sys.exit("REFUS : le message contient une condition ou une réserve ; demander une approbation sans condition.")
     negations = ("ne ", "n'", "pas", "non", "rien", "jamais", "sauf", "stop", "attend", "plus tard", "pas encore", "annule", "surtout pas")
@@ -52,9 +54,10 @@ def main():
     never = [norm(w) for w in val.get("never_approval", [])]
     if text in never:
         sys.exit("REFUS : « %s » ne vaut jamais approbation." % args.text)
-    lead = text.lstrip("!.:,;- ")
-    if not any(lead == w or lead.startswith(w + " ") or lead.startswith(w + ",") or lead.startswith(w + ".") or lead.startswith(w + "!") for w in sorted(words, key=len, reverse=True)):
-        sys.exit("REFUS : le message doit commencer par une formule d'approbation (%s) ; ici : « %s »." % (", ".join(words), args.text))
+    core = re.sub(r"[^a-z0-9 ]", " ", text)
+    core = " ".join(core.split())
+    if core not in words:
+        sys.exit("REFUS : l'approbation doit être une formule complète et seule (%s), sans texte ajouté ; ici : « %s ». Les précisions (canal, horaire) se donnent dans un message séparé." % (", ".join(words), args.text))
     if not m.get("presented_at"):
         sys.exit("REFUS : la pièce n'a pas été présentée (outbox_present.py).")
     ttl = timedelta(hours=float(val.get("approval_ttl_hours", 24)))
@@ -69,8 +72,16 @@ def main():
         fp = package_fingerprint(ws, m)
         if m.get("package_fingerprint") != fp:
             sys.exit("REFUS : le package a changé depuis sa présentation (légendes, fichiers, canaux ou plafond) ; re-présenter.")
-        if m.get("card_message_id") and args.reply_to and str(args.reply_to) != str(m["card_message_id"]):
+        if not m.get("card_message_id"):
+            sys.exit("REFUS : identifiant de la carte non enregistré ; relancer outbox_present.py --stage final --card-id <id du message> avant toute approbation.")
+        if not args.reply_to or not args.message_id or not args.chat_id:
+            sys.exit("REFUS : --reply-to, --message-id et --chat-id sont obligatoires pour Go 2 (identifiants Telegram du message d'approbation).")
+        if str(args.reply_to) != str(m["card_message_id"]):
             sys.exit("REFUS : le message ne répond pas à la carte de cette pièce (%s attendu, %s reçu)." % (m["card_message_id"], args.reply_to))
+        channels_state = read_json(ws / "state" / "channels.json", {})
+        allowed_chats = {str(channels_state.get("telegram_group_id", ""))} | {str(a.get("telegram_id")) for a in approvers}
+        if str(args.chat_id) not in allowed_chats:
+            sys.exit("REFUS : chat %s inconnu (ni le groupe Novia Com, ni un DM d'une personne autorisée)." % args.chat_id)
     if args.stage == "go1" and m["status"] not in ("presented", "final_presented"):
         sys.exit("REFUS : statut %s incompatible avec Go 1." % m["status"])
 

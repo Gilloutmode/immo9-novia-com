@@ -120,7 +120,7 @@ description: Génération d'emails HTML professionnels : mise en forme optimale,
         <!-- CLOSING -->
         <hr class="divider">
         <p>[Conclusion]</p>
-        <p><strong>Gil</strong></p>
+        <p><strong>Prénom Nom</strong></p>
 
       </td></tr>
     </table>

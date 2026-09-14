@@ -2,7 +2,7 @@
 
 Novia Com est un agent OpenClaw dédié au pôle communication d'IMMO9 (promoteur et distributeur de logements neufs à Toulouse, Bordeaux, Montpellier, Nantes et Rennes). Il fait la veille du marché du neuf chaque matin, propose et produit des contenus dans la voix d'IMMO9 pour quatre audiences, décline chaque pièce dans les formats des plateformes, mesure ce qui a été publié, et **ne publie jamais sans un « Go publie » d'une personne autorisée**.
 
-Ce dépôt contient tout ce qu'il faut pour l'installer sur un serveur OpenClaw existant, le brancher aux comptes d'IMMO9 et le faire évoluer chaque semaine par un simple `git pull`.
+Ce dépôt contient tout ce qu'il faut pour l'installer sur un serveur OpenClaw existant (2026.9.1 ou plus récent), le brancher aux comptes d'IMMO9 et le faire évoluer chaque semaine par un simple `git pull`.
 
 ## Ce que contient le dépôt
 ```

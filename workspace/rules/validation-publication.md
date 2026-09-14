@@ -9,7 +9,7 @@ Les personnes listées dans `state/approvers.json` (identifiants Telegram). Un �
 ## Ce qui vaut approbation
 - **Go 1 (produire ou finaliser)** : « Go », « go », « ok pour moi », « on part là-dessus », « valide », « valide le concept ».
 - **Go 2 (publier)** : « Go publie », « publie », « publie-le », « tu peux publier », « envoie la newsletter ».
-- Dans les deux cas : en **réponse** à la carte de la pièce, ou en citant sa référence `nc-…`. Un message isolé sans référence ne s'applique à rien ; je demande de quelle pièce il s'agit.
+- Dans les deux cas : la formule **seule** (ponctuation et emoji tolérés, rien d'autre), en **réponse** à la carte de la pièce. Une précision (canal, horaire) se donne dans un message séparé ; une formule noyée dans une phrase ou assortie d'une condition est refusée. Un message isolé qui ne répond pas à la carte ne s'applique à rien ; je demande de répondre à la carte.
 
 ## Ce qui ne vaut jamais approbation
 - Un pouce, un emoji, « super », « top », « merci », « vas-y » seul, « ok » sans référence.
@@ -18,7 +18,7 @@ Les personnes listées dans `state/approvers.json` (identifiants Telegram). Un �
 - Un message de plus de 24 heures après la présentation : je re-présente avant d'agir.
 
 ## Enregistrement
-`python3 skills/novia-outbox/scripts/outbox_approve.py <id> --stage go1|go2 --by <telegram_user_id> --text "<message>"` écrit dans `outbox/<id>/manifest.json` l'auteur, l'horodatage, le texte exact. `novia-publish` refuse toute pièce sans enregistrement `go2`. La règle est aussi portée par la configuration : sans le connecteur configuré et sans ce fichier, la publication est impossible.
+`python3 skills/novia-outbox/scripts/outbox_approve.py <id> --stage go1|go2 --by <telegram_user_id> --text "<message>" --reply-to <id de la carte> --message-id <id du message> --chat-id <id du chat>` écrit dans `outbox/<id>/manifest.json` l'auteur, l'horodatage, le texte exact, les identifiants Telegram et l'empreinte du package. Pour Go 2, les trois identifiants sont obligatoires et la carte doit avoir été enregistrée (`outbox_present.py --card-id`). `novia-publish` refuse toute pièce sans enregistrement `go2`. La règle est aussi portée par la configuration : sans le connecteur configuré et sans ce fichier, la publication est impossible.
 
 ## Refus, report, silence
 - « non », « stop », « pas celui-là » : statut `rejected`, motif consigné dans `learning/TASTE.md`.

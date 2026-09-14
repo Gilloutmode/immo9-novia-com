@@ -71,21 +71,37 @@ def add_history(manifest, event, by=None, note=None):
     })
 
 
+def send_plan(manifest):
+    """Plan d'envoi canonique : pour chaque canal, ce qui aura un effet externe (légende, titre, persona, fichiers dans l'ordre)."""
+    channels = list(manifest.get("channels") or [manifest.get("channel_primary")])
+    plan = []
+    for ch in channels:
+        assets = [a.get("file", "") for a in manifest.get("assets", []) if not a.get("channels") or ch in a["channels"]]
+        plan.append({"channel": ch, "caption": manifest.get("captions", {}).get(ch) or manifest.get("captions", {}).get("default") or "",
+                     "title": manifest.get("title", ""), "persona": manifest.get("persona"), "assets": assets,
+                     "ceiling": manifest.get("cost", {}).get("ceiling")})
+    return plan
+
+
 def package_fingerprint(ws, manifest):
-    """Empreinte SHA-256 du package : légendes, fichiers (contenu), canaux, plafond. Change = approbation caduque."""
+    """Empreinte SHA-256 du plan d'envoi et du contenu des fichiers, dans l'ordre. Change = approbation caduque."""
     import hashlib
     h = hashlib.sha256()
-    h.update(json.dumps(manifest.get("captions", {}), sort_keys=True, ensure_ascii=False).encode("utf-8"))
-    h.update(json.dumps(sorted(manifest.get("channels", [])), ensure_ascii=False).encode("utf-8"))
-    h.update(str(manifest.get("cost", {}).get("ceiling")).encode("utf-8"))
-    for a in sorted(manifest.get("assets", []), key=lambda x: x.get("file", "")):
+    h.update(json.dumps(send_plan(manifest), sort_keys=True, ensure_ascii=False).encode("utf-8"))
+    for a in manifest.get("assets", []):  # ordre du manifest conservé
         f = ws / "outbox" / manifest["id"] / a.get("file", "")
-        h.update(a.get("file", "").encode("utf-8"))
+        h.update(("|" + a.get("file", "") + "|" + ",".join(a.get("channels") or [])).encode("utf-8"))
         if f.is_file():
             with f.open("rb") as fh:
                 for chunk in iter(lambda: fh.read(65536), b""):
                     h.update(chunk)
+        else:
+            h.update(b"<missing>")
     return h.hexdigest()
+
+
+def missing_assets(ws, manifest):
+    return [a.get("file", "") for a in manifest.get("assets", []) if not (ws / "outbox" / manifest["id"] / a.get("file", "")).is_file()]
 
 
 def onboarding_status(ws):

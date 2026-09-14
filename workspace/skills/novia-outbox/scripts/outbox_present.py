@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, append_line, package_fingerprint, onboarding_status, onboarding_rank, load_contract  # noqa: E402
+from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, append_line, package_fingerprint, onboarding_status, onboarding_rank, load_contract, missing_assets  # noqa: E402
 
 
 def main():
@@ -33,6 +33,9 @@ def main():
             sys.exit("REFUS : contrôle de conformité non consigné (quality.compliance_checked) ; voir rules/conformite-immobilier.md.")
         if not m.get("captions"):
             sys.exit("REFUS : aucune légende dans le manifest ; le package final doit être complet.")
+        miss = missing_assets(ws, m)
+        if miss:
+            sys.exit("REFUS : fichiers déclarés mais absents : %s" % ", ".join(miss))
     if m["status"] in ("published", "rejected", "expired"):
         sys.exit("pièce %s en statut %s : ne peut plus être présentée" % (m["id"], m["status"]))
     if args.score is not None:

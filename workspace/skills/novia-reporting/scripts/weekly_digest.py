@@ -44,8 +44,12 @@ def main():
             if len(rows) >= 2:
                 rows.sort(key=lambda kv: kv[1], reverse=True)
                 print("%s : meilleure %s/%s (%g), plus faible %s/%s (%g), sur %d observations" % (metric, rows[0][0][0], rows[0][0][1], rows[0][1], rows[-1][0][0], rows[-1][0][1], rows[-1][1], len(rows)))
-    with_metrics = {k[0] for k in per_piece}
-    missing = [l.split(" · ")[1] for l in published if l.split(" · ")[1] not in with_metrics]
+    published_pairs = []
+    for l in published:
+        cells = [c.strip() for c in l.split(" · ")]
+        if len(cells) >= 5:
+            published_pairs.append((cells[1], cells[4]))
+    missing = ["%s/%s" % pc for pc in published_pairs if pc not in per_piece]
     if missing:
         print("Sans métriques encore : " + ", ".join(sorted(set(missing))))
     n = len(published)

@@ -3,7 +3,7 @@
 Public : Julien (administrateur technique). Durée : une heure pour l'installation, l'onboarding se fait ensuite avec l'équipe sur quelques jours. Tout est rejouable : les scripts sont idempotents et sauvegardent avant d'écrire.
 
 ## 0. Prérequis sur le serveur
-- OpenClaw 2026.6 ou plus récent (recommandé : 2026.9.x ; `cron.skipMissedJobs` demande 2026.9.1). Vérifier : `openclaw --version`.
+- OpenClaw **2026.9.1 ou plus récent** (testé sur 2026.9.4 ; l'installateur utilise `config patch --replace-path` et `cron.skipMissedJobs`, absents des versions 2026.6.x). Vérifier : `openclaw --version` ; mettre à jour avant si besoin.
 - `python3` ≥ 3.8, `ffmpeg` et `ffprobe` (déclinaisons, audiograms), `git`.
 - Recommandé : `chromium` (rendu des carrousels et infographies en PNG et PDF ; sinon l'outil `browser` d'OpenClaw fait les captures), `node` ≥ 18 (HyperFrames, supermonteur).
 - Debian/Ubuntu : `sudo apt install -y python3 ffmpeg chromium git` (police pour les audiograms : `fonts-dejavu`).
