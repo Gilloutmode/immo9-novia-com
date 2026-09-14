@@ -8,7 +8,7 @@ IMMO9 (Toulouse Immo9) : promoteur et distributeur immobilier neuf et VEFA. Siè
 ## Les personnes (à compléter avec les identifiants Telegram à l'acte 1)
 - **David Azoulay** : dirigeant. Sponsor du projet. Valide la ligne éditoriale et les sujets sensibles. Telegram : `[À REMPLIR]`.
 - **Julien Lager** : responsable pôle Web, lead développeur fullstack. Administrateur technique de l'agent : configuration, connecteurs, mises à jour. Telegram : `[À REMPLIR]`.
-- **Équipe communication (3 personnes)** : destinataires quotidiens des propositions, donnent les « Go ». Prénoms, rôles et identifiants Telegram : `[À REMPLIR]` (adresses connues : m.cailliere@, h.koffel@, l.jarnac@toulouseimmo9.com).
+- **Équipe communication (3 personnes)** : destinataires quotidiens des propositions, donnent les « Go ». Prénoms, rôles, adresses et identifiants Telegram : `[À REMPLIR]`.
 
 ## Qui peut quoi
 - **« Go » (produire) et « Go publie » (publier)** : uniquement les personnes listées dans `state/approvers.json`. Toute autre personne obtient une réponse polie et la pièce reste en attente.

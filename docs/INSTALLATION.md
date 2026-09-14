@@ -11,7 +11,7 @@ Public : Julien (administrateur technique). Durée : une heure pour l'installati
 ## 1. Récupérer le dépôt et diagnostiquer
 ```bash
 cd /opt/openclaw   # ou le dossier où vivent vos workspaces
-git clone git@github.com:Gilloutmode/immo9-novia-com.git
+git clone https://github.com/Gilloutmode/immo9-novia-com.git
 cd immo9-novia-com
 bash scripts/doctor.sh
 ```

@@ -22,8 +22,8 @@ Novia Com est un agent OpenClaw dédié au pôle communication d'IMMO9, promoteu
 | **Ce qu'il ne fait jamais seul** | Publier, envoyer une newsletter, contacter un tiers, dépenser au-delà d'un plafond, citer un chiffre sans source ni date, promettre un rendement |
 | **Ce que l'équipe garde** | Deux validations par pièce au maximum : « Go » sur la proposition, « Go publie » sur le package final, dans Telegram |
 | **Périmètre couvert** | Les 32 fonctionnalités demandées par IMMO9 (mail du 22 mai 2026), tracées une à une dans [la matrice](docs/MATRICE-FONCTIONNALITES.md) : 15 livrées, 5 livrées avec un connecteur à brancher, 9 au palier 2, 3 en feuille de route |
-| **Installation** | Une heure avec le [prompt Claude Code](docs/PROMPT-CLAUDE-CODE.md) ou le [guide pas à pas](docs/INSTALLATION.md), puis quelques jours d'onboarding avec l'équipe |
-| **Mises à jour** | `bash scripts/update.sh` chaque semaine ; vos fichiers d'état et de mémoire ne sont jamais écrasés |
+| **Installation** | Dépôt public à des fins d'installation : le [prompt Claude Code](docs/PROMPT-CLAUDE-CODE.md) le récupère et installe tout, en une heure ; le [guide pas à pas](docs/INSTALLATION.md) fait la même chose à la main ; puis quelques jours d'onboarding avec l'équipe |
+| **Mises à jour** | Optionnelles : si une nouvelle version est livrée, le même prompt (ou `bash scripts/update.sh`) la réapplique ; vos fichiers d'état et de mémoire ne sont jamais écrasés |
 | **Origine et travail** | Méthodes éprouvées depuis plusieurs mois sur un studio de contenu Hermes en production, transposées au métier d'IMMO9 et à OpenClaw ; environ 234 heures de travail cumulées, de mai à septembre 2026 |
 
 ---
@@ -243,18 +243,18 @@ Déclarées de façon idempotente par clé (`novia-com:<clé>`), livrées désac
 
 **Prérequis** : OpenClaw 2026.9.1 ou plus récent, `python3` 3.8+, `ffmpeg`, `git` ; recommandés `chromium` (rendu des visuels) et `node` 18+ (HyperFrames, supermonteur).
 
-**Avec Claude Code sur le serveur**, coller le prompt de [docs/PROMPT-CLAUDE-CODE.md](docs/PROMPT-CLAUDE-CODE.md). Il commence par une étape zéro de vérifications (système, version, gateway, agents et comptes existants, outils, réseau, tests hors ligne), rend un tableau de compatibilité, pose onze questions adaptées à votre environnement (mise à jour, Telegram, modèles, connecteur de publication, newsletter, mémoire, rendu, métriques, coûts, périmètre, charte), puis guide chaque étape sans rien écrire sans confirmation.
+**Avec Claude Code sur le serveur**, coller le prompt de [docs/PROMPT-CLAUDE-CODE.md](docs/PROMPT-CLAUDE-CODE.md) : il récupère lui-même ce dépôt public, puis commence par une étape zéro de vérifications (système, version, gateway, agents et comptes existants, outils, réseau, tests hors ligne), rend un tableau de compatibilité, pose onze questions adaptées à votre environnement (mise à jour, Telegram, modèles, connecteur de publication, newsletter, mémoire, rendu, métriques, coûts, périmètre, charte), puis guide chaque étape sans rien écrire sans confirmation.
 
 **En six étapes, à la main** ([docs/INSTALLATION.md](docs/INSTALLATION.md)) :
 
-1. `git clone` puis `bash scripts/doctor.sh` : diagnostic de la machine.
+1. `git clone https://github.com/Gilloutmode/immo9-novia-com.git` puis `bash scripts/doctor.sh` : diagnostic de la machine.
 2. Bot Telegram « Novia Com », groupe de travail, identifiants des personnes autorisées ; `workspace/state/approvers.json` et `channels.json` remplis depuis les exemples.
 3. Variables d'environnement (`config/env.example`, au minimum le jeton du bot) dans l'environnement du gateway et du shell.
 4. `bash scripts/install.sh` en simulation, puis `--apply` : agent isolé, compte Telegram (jeton référencé, jamais copié), configuration fusionnée, skills partagés, crons déclarés. Sauvegarde avant d'écrire, rejouable, refuse les identifiants d'exemple.
 5. Dans Telegram : « Commençons l'onboarding ».
 6. À la fin de l'onboarding : `bash crons/install-crons.sh --enable-p1`, puis une première publication avec « Go publie ».
 
-Chaque semaine : `bash scripts/update.sh`. Vérifications utiles : `openclaw agents list --bindings`, `openclaw skills check --agent novia-com`, `bash scripts/acceptance.sh`.
+Vérifications utiles : `openclaw agents list --bindings`, `openclaw skills check --agent novia-com`, `bash scripts/acceptance.sh`.
 
 ---
 

@@ -1,9 +1,11 @@
-# Le prompt à coller dans Claude Code pour être guidé pas à pas
+# Le prompt à coller dans Claude Code pour installer Novia Com
 
-Sur le serveur OpenClaw : exporter d'abord les variables de `config/env.example` dans le shell (au minimum `NOVIA_TELEGRAM_BOT_TOKEN`), puis ouvrir Claude Code dans le dossier du dépôt cloné (`cd immo9-novia-com && claude`) et coller le bloc ci-dessous tel quel. Claude Code hérite de l'environnement du shell qui le lance. Claude lit le dépôt, vérifie l'environnement, pose ses questions, propose chaque commande, attend votre accord avant toute écriture, et ne touche à rien d'autre que ce projet.
+Le dépôt est public à des fins d'installation : rien à demander, rien à configurer sur GitHub. Sur le serveur OpenClaw, ouvrir Claude Code dans le dossier où vivent vos workspaces (par exemple `cd /opt/openclaw && claude`) et coller le bloc ci-dessous tel quel. Le prompt récupère le dépôt lui-même, vérifie l'environnement, pose ses questions, propose chaque commande, attend votre accord avant toute écriture, et ne touche à rien d'autre que ce projet. Si le jeton du bot Telegram est déjà exporté dans le shell qui lance Claude Code, l'installation le prend en compte ; sinon le prompt vous dit quand et où le déclarer.
 
 ```text
-Tu es mon assistant d'installation pour « Novia Com », un agent OpenClaw livré dans ce dépôt. Je suis l'administrateur technique d'IMMO9. Nous sommes sur le serveur OpenClaw d'IMMO9, dans le dossier du dépôt.
+Tu es mon assistant d'installation pour « Novia Com », un agent OpenClaw livré dans le dépôt public https://github.com/Gilloutmode/immo9-novia-com. Je suis l'administrateur technique d'IMMO9. Nous sommes sur le serveur OpenClaw d'IMMO9.
+
+Première action, avant tout : si le dossier immo9-novia-com n'existe pas dans le répertoire courant, exécute git clone https://github.com/Gilloutmode/immo9-novia-com.git puis place-toi dedans (cd immo9-novia-com) ; s'il existe déjà, place-toi dedans et exécute git pull --ff-only pour avoir la dernière version. Tout ce qui suit s'exécute depuis ce dossier.
 
 Règles absolues :
 1. Tu lis d'abord README.md, docs/INSTALLATION.md, docs/SECURITE.md, docs/LIMITES.md et connectors/README.md en entier avant de proposer quoi que ce soit.
@@ -39,12 +41,12 @@ Consigne mes réponses dans un fichier docs/REPONSES-INSTALLATION.md (le seul fi
 
 Déroulé, une étape à la fois, avec un récapitulatif d'une ligne à la fin de chaque étape :
 Étape 1 · Telegram : guide-moi pour créer le bot avec @BotFather si besoin, le groupe « Novia Com », récupérer l'identifiant du groupe et ceux des personnes autorisées (openclaw directory ou @userinfobot). Aide-moi à remplir workspace/state/approvers.json et workspace/state/channels.json à partir des exemples (adaptateurs selon mes réponses de l'étape 0 bis), puis valide le JSON.
-Étape 2 · Variables : vérifie par leur nom seulement que les variables de config/env.example indispensables au palier 1 sont présentes dans cet environnement ; dis-moi lesquelles attendent un connecteur. Si le jeton Telegram manque, arrête-toi et dis-moi comment le déclarer dans l'environnement du service gateway et dans ce shell avant de relancer Claude Code.
+Étape 2 · Variables : vérifie par leur nom seulement que les variables de config/env.example indispensables au palier 1 sont présentes dans cet environnement ; dis-moi lesquelles attendent un connecteur. Si le jeton Telegram manque, dis-moi comment le déclarer dans l'environnement du service gateway et dans ce shell, puis relance Claude Code depuis ce shell et recolle ce prompt : il reprendra là où nous en étions.
 Étape 3 · Installation : montre-moi la sortie de bash scripts/install.sh (simulation). Explique chaque action prévue, y compris les modifications hors de l'agent. Après mon ok, exécute bash scripts/install.sh --apply. Vérifie ensuite openclaw agents list --bindings, openclaw config validate, openclaw skills check --agent novia-com, puis openclaw daemon restart et openclaw doctor. Si la configuration signale plusieurs comptes Telegram, propose openclaw config set channels.telegram.defaultAccount <compte existant>.
 Étape 4 · Premier contact : envoie-moi le premier message à écrire à l'agent dans Telegram (« Commençons l'onboarding ») et vérifie dans les journaux du gateway que l'agent répond depuis le bon compte et le bon workspace.
 Étape 5 · Onboarding : explique-moi les cinq actes de workspace/skills/novia-onboarding/SKILL.md et ce que l'équipe doit préparer (accès au site et aux comptes pour extraire la voix, charte, logos, salons, concurrents, presse locale, alertes Google en RSS). Reste disponible pendant l'onboarding pour vérifier les fichiers écrits par l'agent (doctrine/VOICE.md, LINES.md, templates/_tokens.json) et python3 workspace/skills/novia-onboarding/scripts/onboarding_state.py --check.
 Étape 6 · Crons et test : après l'onboarding (je te le dirai), exécute bash crons/install-crons.sh --enable-p1 et openclaw cron list --all --agent novia-com ; puis guide-moi pour une première publication : python3 workspace/skills/novia-publish/scripts/publish.py <id> --preview (aperçu sans approbation ni envoi), puis « Go publie » dans Telegram en réponse à la carte, puis vérification sur la plateforme.
-Étape 7 · Bilan : rends un tableau de ce qui est installé, de ce qui reste à brancher (connecteurs, mémoire, rendu), des points orange restants, et la commande de mise à jour hebdomadaire (bash scripts/update.sh).
+Étape 7 · Bilan : rends un tableau de ce qui est installé, de ce qui reste à brancher (connecteurs, mémoire, rendu) et des points orange restants. Si une nouvelle version est livrée un jour, ce même prompt la réapplique : git pull puis scripts/install.sh --apply, sans toucher aux fichiers d'état.
 
 Commence par l'étape 0.
 ```
