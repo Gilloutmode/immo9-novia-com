@@ -198,6 +198,25 @@ python3 - <<'PY'
 import json; c=json.load(open("state/channels.json")); c["channels"]["linkedin"]={"adapter":"fake_rejected"}; json.dump(c,open("state/channels.json","w"))
 PY
 tr_ "refus explicite du serveur : échec certain rapporté" python3 skills/novia-publish/scripts/publish.py "$ID6"
+t "adaptateur upload-post réel : réponses asynchrone, ambiguë, succès et refus classées correctement" python3 - <<'PY'
+import importlib.util, sys
+from pathlib import Path
+p = Path("skills/novia-publish/adapters/upload_post.py"); spec = importlib.util.spec_from_file_location("up", p); up = importlib.util.module_from_spec(spec); spec.loader.exec_module(up)
+import os; os.environ["UPLOAD_POST_API_KEY"] = "test"
+open("/tmp/novia-acc-asset.png", "wb").write(b"x")
+cases = [({"request_id": "r1"}, "submitted"), ({"results": {"linkedin": {}}}, "submitted"), ({"results": {"linkedin": {"status": "processing"}}}, "processing"), ({"results": {"linkedin": {"success": True, "url": "u"}}}, "published")]
+for resp, expected in cases:
+    up.request_multipart = lambda *a, **k: resp
+    r = up.publish(channel="linkedin", settings={"user": "immo9", "platform": "linkedin"}, caption="c", assets=["/tmp/novia-acc-asset.png"], manifest={"id": "t", "title": "t"})
+    assert r["state"] == expected, (resp, r)
+up.request_multipart = lambda *a, **k: {"results": {"linkedin": {"success": False, "error": "trop long"}}}
+try:
+    up.publish(channel="linkedin", settings={"user": "immo9", "platform": "linkedin"}, caption="c", assets=["/tmp/novia-acc-asset.png"], manifest={"id": "t", "title": "t"}); raise SystemExit("refus non levé")
+except up.RemoteRejected:
+    pass
+PY
+tr_ "--preview et --resolve incompatibles" python3 skills/novia-publish/scripts/publish.py "$ID5" --preview --resolve linkedin=published
+t "résolutions multiples : une invalide, aucune mutation" bash -c "! python3 skills/novia-publish/scripts/publish.py '$ID5' --resolve linkedin=published --resolve instagram=published >/dev/null 2>&1 && python3 -c \"import json; m=json.load(open('outbox/$ID5/manifest.json')); assert m['publication']['results'][0]['state']=='unknown'\""
 t "refus explicite : aucune tentative conservée, nouvel essai autorisé" bash -c "python3 -c \"import json; m=json.load(open('outbox/$ID6/manifest.json')); assert not m['publication']['results']\""
 ID2="$(python3 skills/novia-outbox/scripts/outbox_new.py --format F1 --persona P1 --channel linkedin --title "Test calibration")"
 set_caption "outbox/$ID2/manifest.json" "Test. Source : https://example.org"

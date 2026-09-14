@@ -56,7 +56,10 @@ def publish(channel, settings, caption, assets, manifest):
     if isinstance(entry, dict):
         if entry.get("success") is True:
             return {"state": "published", "id": entry.get("post_id") or entry.get("id") or res.get("request_id"), "url": entry.get("url"), "raw": res}
-        raise RemoteRejected("upload-post : échec sur %s : %s" % (platform, entry.get("error") or entry.get("message") or entry))
+        if entry.get("success") is False or entry.get("error"):  # refus explicite : rien n'a été publié
+            raise RemoteRejected("upload-post : échec sur %s : %s" % (platform, entry.get("error") or entry.get("message") or entry))
+        status = str(entry.get("status") or "").lower()  # entrée sans verdict : accepté, en cours ou inconnu, jamais un refus
+        return {"state": "processing" if "process" in status else "submitted", "id": entry.get("post_id") or entry.get("id") or res.get("request_id"), "url": entry.get("url"), "raw": res}
     if res.get("success") is False or res.get("error"):
         raise RemoteRejected("upload-post : %s" % (res.get("error") or res.get("message") or res))
     return {"state": "submitted", "id": res.get("request_id") or res.get("id"), "url": res.get("url"), "raw": res}

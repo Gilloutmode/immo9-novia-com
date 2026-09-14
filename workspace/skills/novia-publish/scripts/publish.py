@@ -80,6 +80,8 @@ def main():
 
     ws = find_workspace()
     contract = load_contract(ws)
+    if args.preview and args.resolve:
+        sys.exit("--preview et --resolve sont incompatibles (l'aperçu ne modifie rien).")
     lock = ws / "outbox" / args.piece_id / ".publish.lock"
     if not args.preview:
         if not lock.parent.is_dir():
@@ -128,23 +130,26 @@ def _run(ws, contract, args, lock):
     if not args.preview:
         repair_traces(ws, m)  # les traces d'un résultat déjà obtenu se réparent avant tout contrôle
     if args.resolve:  # confirmation d'un effet passé : indépendante de la validité d'un nouvel envoi
-        for item in args.resolve:
+        plan_res = []
+        for item in args.resolve:  # 1. tout valider avant de toucher au manifest
             ch_r, _, st = item.partition("=")
             if st not in ("published", "failed"):
-                sys.exit("--resolve attend CANAL=published ou CANAL=failed")
-            hit = False
-            for r in m["publication"]["results"]:
-                if r.get("channel") == ch_r and r.get("state") in UNKNOWN:
-                    r["state"] = st
-                    r["resolved_at"] = now_iso()
-                    hit = True
-                    if st == "published":
-                        trace_lines(ws, m, r)
-            if not hit:
-                sys.exit("--resolve : aucune tentative d'issue inconnue pour %s" % ch_r)
+                sys.exit("--resolve attend CANAL=published ou CANAL=failed (reçu : %s)" % item)
+            hits = [r for r in m["publication"]["results"] if r.get("channel") == ch_r and r.get("state") in UNKNOWN]
+            if not hits:
+                sys.exit("--resolve : aucune tentative d'issue inconnue pour %s ; rien n'a été modifié." % ch_r)
+            plan_res.append((ch_r, st, hits))
+        for ch_r, st, hits in plan_res:  # 2. appliquer, puis sauvegarder le manifest
+            for r in hits:
+                r["state"] = st
+                r["resolved_at"] = now_iso()
             add_history(m, "resolved", by="humain", note="%s=%s" % (ch_r, st))
         recompute_status(m, approved_early, str(go2_early.get("by")))
         write_json(path, m)
+        for ch_r, st, hits in plan_res:  # 3. traces réparables, après la sauvegarde
+            if st == "published":
+                for r in hits:
+                    trace_lines(ws, m, r)
         print("résolution enregistrée : %s ; statut %s" % (", ".join(args.resolve), m["status"]))
         if all(x.endswith("=published") for x in args.resolve):
             return

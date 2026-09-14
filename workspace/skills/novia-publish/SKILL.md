@@ -19,7 +19,7 @@ Pour l'adaptateur Meta, les médias à publier sont copiés dans `export/<id>/`,
 ## Adaptateurs livrés
 - `dryrun` : simulation complète, toujours disponible.
 - `upload_post` : API upload-post.com (un seul jeton, envoi de fichiers, multi-plateformes). Réglages : `user` (profil upload-post), `platforms`. Secret : `UPLOAD_POST_API_KEY`.
-- `meta_graph` : Instagram (compte professionnel) et Page Facebook via l'API Graph. Contrainte : Instagram exige une URL publique pour l'image ou la vidéo ; le réglage `public_base_url` doit servir le dossier `outbox/` (voir `connectors/README.md`). Secrets : `META_PAGE_ACCESS_TOKEN`, réglages `ig_user_id`, `fb_page_id`.
+- `meta_graph` : Instagram (compte professionnel) et Page Facebook via l'API Graph. Contrainte : Instagram exige une URL publique pour l'image ou la vidéo ; `publish.py` copie les seuls médias à publier dans `export/<id>/` et le réglage `public_base_url` doit servir ce dossier `export/` uniquement, jamais `outbox/` (voir `connectors/README.md`). Secrets : `META_PAGE_ACCESS_TOKEN`, réglages `ig_user_id`, `fb_page_id`.
 - `linkedin` : publication d'un post texte ou image sur une Page (API Community Management). Secret : `LINKEDIN_ACCESS_TOKEN`, réglage `organization_urn`.
 - `youtube` : dépôt d'une vidéo (API YouTube Data v3, OAuth). Secrets : `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`.
 - `brevo` : création d'une campagne email en brouillon puis envoi (API Brevo). Secret : `BREVO_API_KEY`, réglages `sender`, `list_ids` par persona.
