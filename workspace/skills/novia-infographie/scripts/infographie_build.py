@@ -32,18 +32,25 @@ def main():
     if not data.get("month"):
         sys.exit("REFUS : champ month vide (ex. « septembre 2026 »)")
     pad = int(w * 0.08)
+    if len(rates) > 4 or len(prices) > 6:
+        sys.exit("REFUS : au plus 4 taux et 6 prix par infographie (ici %d et %d) ; faire deux visuels" % (len(rates), len(prices)))
     css = """
-    @page { size: %dpx %dpx; margin: 0; } html,body{margin:0;padding:0}
-    .s{width:%dpx;height:%dpx;box-sizing:border-box;padding:%dpx;background:%s;color:%s;font-family:%s;position:relative;overflow:hidden}
-    .k{font-size:32px;letter-spacing:2px;text-transform:uppercase;color:%s;font-weight:bold;margin-bottom:24px}
-    h1{font-family:%s;font-size:66px;line-height:1.1;margin:0 0 36px 0}
-    .row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid rgba(0,0,0,.08);padding:18px 0}
-    .lab{font-size:38px} .val{font-family:%s;font-size:60px;font-weight:700;color:%s} .unit{font-size:30px;color:%s;margin-left:8px}
-    .src{font-size:24px;color:%s;margin-top:6px} .sec{font-size:30px;color:%s;text-transform:uppercase;letter-spacing:1px;margin:40px 0 8px 0}
-    .foot{position:absolute;left:%dpx;right:%dpx;bottom:%dpx;font-size:28px;color:%s;line-height:1.35} .foot .b{font-weight:700;letter-spacing:2px;display:block;margin-bottom:6px}
-    .note{font-size:26px;color:%s;margin-top:24px}
-    """ % (w, h, w, h, pad, tokens["color_secondary"], tokens["color_text"], tokens["font_body"], tokens["color_accent"], tokens["font_title"],
-           tokens["font_title"], tokens["color_primary"], tokens["color_muted"], tokens["color_muted"], tokens["color_muted"], pad, pad, pad, tokens["color_muted"], tokens["color_muted"])
+    @page { size: %(w)dpx %(h)dpx; margin: 0; } html,body{margin:0;padding:0}
+    .s{width:%(w)dpx;height:%(h)dpx;box-sizing:border-box;padding:%(pad)dpx %(pad)dpx %(foot)dpx %(pad)dpx;background:%(bg)s;color:%(text)s;font-family:%(fb)s;position:relative;overflow:hidden}
+    .k{font-size:28px;letter-spacing:2px;text-transform:uppercase;color:%(accent)s;font-weight:bold;margin-bottom:14px}
+    h1{font-family:%(ft)s;font-size:58px;line-height:1.08;margin:0 0 22px 0}
+    .sec{font-size:24px;color:%(muted)s;text-transform:uppercase;letter-spacing:1px;margin:18px 0 4px 0}
+    .row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid rgba(0,0,0,.08);padding:10px 0 4px 0}
+    .lab{font-size:32px} .val{font-family:%(ft)s;font-size:50px;font-weight:700;color:%(primary)s} .unit{font-size:24px;color:%(muted)s;margin-left:6px}
+    .src{font-size:20px;color:%(muted)s;margin:2px 0 6px 0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin-top:6px}
+    .card{border-bottom:2px solid rgba(0,0,0,.08);padding:8px 0 4px 0}
+    .card .city{font-size:28px} .card .val{font-size:42px} .card .unit{font-size:20px} .card .src{font-size:18px;margin-bottom:2px}
+    .note{font-size:22px;color:%(muted)s;margin-top:14px}
+    .foot{position:absolute;left:%(pad)dpx;right:%(pad)dpx;bottom:%(padb)dpx;font-size:22px;color:%(muted)s;line-height:1.3}
+    .foot .b{font-weight:700;letter-spacing:2px;display:block;margin-bottom:4px;color:%(primary)s}
+    """ % {"w": w, "h": h, "pad": pad, "foot": int(h * 0.16), "padb": int(pad * 0.6), "bg": tokens["color_secondary"], "text": tokens["color_text"], "fb": tokens["font_body"],
+           "ft": tokens["font_title"], "accent": tokens["color_accent"], "muted": tokens["color_muted"], "primary": tokens["color_primary"]}
     out = ["<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><style>%s</style></head><body><section class=\"s\">" % css]
     out.append("<div class=\"k\">Repères du mois · %s</div><h1>Taux de crédit et prix du neuf</h1>" % html.escape(data["month"]))
     if rates:
@@ -52,10 +59,11 @@ def main():
             out.append("<div class=\"row\"><span class=\"lab\">%s</span><span><span class=\"val\">%s</span><span class=\"unit\">%s</span></span></div><div class=\"src\">%s, %s</div>"
                        % (html.escape(r["label"]), html.escape(str(r["value"])), html.escape(r.get("unit", "")), html.escape(r["source"]), html.escape(r["date"])))
     if prices:
-        out.append("<div class=\"sec\">Prix du neuf</div>")
+        out.append("<div class=\"sec\">Prix du neuf</div><div class=\"grid\">")
         for p in prices:
-            out.append("<div class=\"row\"><span class=\"lab\">%s</span><span><span class=\"val\">%s</span><span class=\"unit\">%s</span></span></div><div class=\"src\">%s, %s</div>"
+            out.append("<div class=\"card\"><div class=\"city\">%s</div><div><span class=\"val\">%s</span><span class=\"unit\">%s</span></div><div class=\"src\">%s, %s</div></div>"
                        % (html.escape(p["city"]), html.escape(str(p["value"])), html.escape(p.get("unit", "")), html.escape(p["source"]), html.escape(p["date"])))
+        out.append("</div>")
     if data.get("note"):
         out.append("<div class=\"note\">%s</div>" % html.escape(data["note"]))
     out.append("<div class=\"foot\"><span class=\"b\">%s</span>Relevé %s. L'investissement immobilier comporte des risques ; vérifiez votre situation avec un professionnel.</div>" % (html.escape(tokens["brand_name"]), html.escape(data["month"])))
