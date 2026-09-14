@@ -1,0 +1,44 @@
+# État de l'art (septembre 2026) : agents IA et communication immobilière
+
+> Synthèse d'une série de recherches multi-moteurs lancée le 14 septembre 2026 (huit requêtes, plus de soixante sources uniques par requête), dépouillée source par source. Ce document ne retient que ce qui est sourcé et daté ; les chiffres marketing invérifiables ont été écartés et sont listés en fin de document pour que personne ne les reprenne par mégarde.
+
+## 1. Ce que font les acteurs de l'immobilier avec l'IA en 2026
+- **La bascule n'est pas « l'IA écrit des textes », c'est l'orchestration à partir des données du bien.** Les outils récents partent d'une saisie unique (programme, visuels, vidéo) et déclenchent la déclinaison multicanale : annonces, réseaux, portails, email. Sources : pages produit Coraly (coraly.ai), ListingWizard (listingwizard.ai), Dashe (dashe.dev), lues le 14/09/2026. Confiance moyenne (pages d'éditeurs).
+- **Le motif d'architecture dominant sépare données, gabarits et génération.** Ingestion structurée, génération configurée avec les règles de marque et de conformité, gabarits qui portent les éléments fixes. Une source (article, vidéo, newsletter) est repiquée automatiquement en plusieurs formats. Sources : ketchupconsulting.com (guide 2026), kompozy.io, socialrealtr.com. Confiance moyenne, motif décrit de façon cohérente par plusieurs sources indépendantes. C'est exactement la structure retenue pour Novia Com (doctrine, gabarits, skills).
+- **La validation humaine est présentée comme non négociable**, pour l'exactitude, l'ancrage local et la conformité. Le motif communautaire OpenClaw est identique : l'agent rédige, l'humain valide, l'agent publie, l'humain contrôle. Sources : inman.com (30/03/2026), ketchupconsulting.com, tldl.io (cas d'usage OpenClaw 2026). Confiance élevée (convergence de familles de sources différentes).
+- **L'erreur numéro un documentée est le contenu générique produit par un outil unique**, sans données de marché ni de stock. Correctif décrit : alimenter la génération par des données locales et datées. Sources : aeoengine.ai, inman.com. Confiance moyenne à élevée sur le diagnostic.
+- **Hygiène des données** : cycles de rafraîchissement courts sur les champs volatils (disponibilités, prix, dates de livraison, éligibilité aux dispositifs). Source : ketchupconsulting.com. Transposé dans Novia Com par des durées de vie des chiffres (taux : un mois ; prix : un trimestre ; dispositif : jusqu'au prochain texte).
+- **La mesure utile porte sur les signaux de conversion, pas sur les métriques de vanité**, avec un point à 90 jours. Source : ketchupconsulting.com. Confiance moyenne.
+- **Nouveau critère : la part de citation dans les moteurs de réponse IA** (guides de quartier en langage clair, entités reconnaissables). Sources : genrank.io, planely.io, virtuance.com. Confiance moyenne sur la tendance, faible sur toute promesse chiffrée.
+- **En France, un écosystème d'outils existe** : Tookano, Artur'in (programmation et posts, avis, newsletters), IACrea, Danim 2, HOQI (home staging, photo vers vidéo), Target First (qualification), Hektor (CRM), PriceHubble, MeilleursAgents, Yanport (données). Sources : keyzia.fr, jayd.ai, targetfirst.com, nymphar.ai. Confiance moyenne sur l'existence, faible sur tout classement.
+- **Un point réglementaire français à lire en source primaire** : le Journal de l'Agence signale de nouvelles règles de transparence sur l'usage de l'IA par les professionnels de l'immobilier (article journaldelagence.com/1412423). Le contenu n'a pas pu être extrait par les moteurs ; à lire avant toute affirmation de conformité.
+- **Le signal social est mince** : sur trente jours, une quinzaine d'items pertinents seulement, et des contenus francophones sceptiques sur les « agents IA ». Le discours d'adoption massive n'est pas soutenu par le volume de discussion réel. Confiance élevée sur la maigreur du signal.
+
+## 2. Publication : connecteurs et prérequis (tarifs relus le 14/09/2026)
+- **Un service de cross-posting évite les revues d'applications** : c'est le prestataire qui détient les applications validées par Meta, LinkedIn, Google et TikTok. En intégration native, IMMO9 doit enregistrer ses applications, passer chaque revue et gérer les jetons.
+- **upload-post.com** (TONVI TECH SL, Espagne, accord de traitement des données publié) : plan gratuit 2 profils et 10 envois par mois sans TikTok ; Basic 24 $ par mois ou 16 $ par mois en annuel pour 5 profils et envois illimités ; Professional 50 $ ou 33 $ en annuel pour 25 profils. Plafonds par compte et par 24 h : Instagram 50, TikTok 15, LinkedIn 150, YouTube 10, Facebook 25. Serveur MCP hébergé et catalogue de skills d'agents. Source : docs.upload-post.com/resources/pricing-and-limits.
+- **Post Bridge** : 29 $ (5 comptes), 39 $ (15), 59 $ (50), 99 $ (illimité) par mois ; MCP inclus ; skill OpenClaw annoncée ; API en supplément non affiché. Source : post-bridge.com/pricing.
+- **Zernio (ex Late)** : à l'usage, 2 comptes gratuits puis 6 $ par compte et par mois jusqu'à 10, 3 $ au-delà. Source : getlate.dev/pricing.
+- **Ayrshare** : 149 $ par mois (1 profil, jusqu'à 14 comptes), 299 $ (10 profils), orienté agences. Source : ayrshare.com/pricing.
+- **X** facture désormais à la publication ; les services retirent les liens par défaut. Hors périmètre.
+- **APIs natives** : Instagram exige un compte professionnel lié à une Page, une revue d'application et une URL publique par média ; LinkedIn exige l'accès au produit Community Management ; YouTube fonctionne avec OAuth et un quota quotidien de 10 000 unités (un dépôt en consomme 1 600). Les rapports ne contenaient aucune page officielle de ces plateformes : ces prérequis ont été recoupés sur des sources secondaires et sont à confirmer sur la documentation officielle avant tout engagement de délai.
+
+## 3. Veille, analytics, social listening
+- **Google Trends** : une API officielle existe en alpha fermée depuis juillet 2025 (developers.google.com/search/apis/trends), sur invitation, sans tarif public ; la bibliothèque non officielle pytrends est décrite comme cassée. En pratique, passer par un fournisseur (DataForSEO, SerpApi) ou par l'interface.
+- **People Also Ask** : pas d'API Google ; DataForSEO (à l'appel, quelques dixièmes de dollar pour mille requêtes) ou SerpApi (abonnement) ; tarifs à relire avant engagement.
+- **Reddit** : l'accès anonyme est bloqué ; une application « script » donne un accès OAuth gratuit pour un usage non commercial léger ; un usage commercial à volume demande un accord écrit avec Reddit (conditions révisées en juillet 2026). Novia Com lit peu et en lecture seule.
+- **Mentions de marque** : Brand24 démarre à 249 $ par mois (199 $ en annuel) ; Mention est sorti du segment PME. Les alertes Google en flux RSS restent la solution gratuite retenue pour démarrer.
+- **Meta Insights** : durcissement en 2026 (fenêtres d'attribution et métriques retirées) rapporté par une synthèse sans page officielle ; à vérifier avant de promettre un reporting précis par API. Les exports CSV restent fiables.
+
+## 4. OpenClaw : pratiques communautaires retenues
+- Fichiers d'amorçage courts (`SOUL.md`, `AGENTS.md`, `USER.md`), plafond conseillé d'environ 12 000 caractères par fichier (awesome-openclaw, guide vérifié contre OpenClaw 2026.5.27) : respecté.
+- Démarrer avec un agent et quelques skills, permissions basses, puis élargir (o-mega.ai, tldl.io) : respecté.
+- Crons idempotents, alertes d'échec, `cron.skipMissedJobs` (OpenClaw 2026.9.1) : respecté.
+- Workspaces séparés, moindre privilège, secrets en variables d'environnement, relecture des skills tiers (vallettasoftware.com, techtarget.com, contextstudios.ai) : respecté.
+- Deux connecteurs de publication exposent des serveurs MCP et des skills d'agents (upload-post, Post Bridge) : critère de choix plus important que l'écart de prix.
+
+## 5. Chiffres écartés (ne pas reprendre)
+« 47 % des agents utilisent l'IA mais 78 % n'en tirent aucun ROI », « 40 % du temps automatisable », « 85 à 99 % d'économie sur le copywriting ou le staging », « 340 % de citations IA en plus », « campagnes IA convertissant 40 % mieux », « ROI email de 36 à 42 $ par dollar » : sources uniques, commerciales, sans méthode ni échantillon. Les taux d'ouverture et d'engagement « immobilier » disponibles sont des moyennes de la transaction anglo-saxonne, pas de la VEFA française.
+
+## 6. Ce que les recherches ne permettent pas d'établir
+Aucun cas vérifiable de promoteur VEFA français équipé d'un agent de communication ; aucune page officielle des plateformes dans le corpus ; le cadre français (transparence IA, mentions obligatoires des dispositifs, visuels non contractuels) reste à lire en source primaire. Ces limites sont intégrées à la doctrine : faits sourcés au niveau officiel seulement, conformité fail-closed.

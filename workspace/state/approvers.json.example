@@ -1,0 +1,6 @@
+{"_comment": "Personnes autorisées à donner « Go » et « Go publie ». Copier en approvers.json et remplir avec les identifiants Telegram (openclaw directory ou @userinfobot).",
+ "approvers": [
+   {"telegram_id": "123456789", "name": "David Azoulay", "role": "dirigeant"},
+   {"telegram_id": "234567890", "name": "Julien Lager", "role": "administrateur"},
+   {"telegram_id": "345678901", "name": "Prénom Nom", "role": "communication"}
+ ]}

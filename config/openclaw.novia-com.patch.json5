@@ -1,0 +1,56 @@
+// Fragment de configuration OpenClaw pour l'agent Novia Com.
+// Appliqué par scripts/install.sh via `openclaw config patch --file` (fusion récursive des objets).
+// Les valeurs __WORKSPACE__ sont remplacées par l'installateur. Aucun secret ici : les jetons sont lus
+// dans l'environnement du gateway (fichier d'environnement du service OpenClaw ou variables exportées).
+{
+  agents: {
+    entries: {
+      "novia-com": {
+        workspace: "__WORKSPACE__",
+        identity: { name: "Novia Com", theme: "directrice de production de la communication IMMO9", emoji: "📣" },
+        thinkingDefault: "medium",
+        tools: {
+          profile: "coding",
+          alsoAllow: ["exec", "message", "browser", "image_generate", "web_search", "web_fetch"],
+          deny: [],
+          elevated: { enabled: false },
+          exec: { mode: "full" },
+        },
+      },
+    },
+  },
+  channels: {
+    telegram: {
+      accounts: {
+        "novia-com": {
+          name: "Novia Com",
+          botToken: { source: "env", provider: "default", id: "NOVIA_TELEGRAM_BOT_TOKEN" },
+          dmPolicy: "allowlist",
+          allowFrom: [],          // identifiants Telegram des personnes autorisées (rempli par install.sh depuis state/approvers.json)
+          groupPolicy: "allowlist",
+          groupAllowFrom: [],     // identifiant du groupe « Novia Com » (rempli depuis state/channels.json)
+        },
+      },
+    },
+  },
+  skills: {
+    entries: {
+      "novia-publish": {
+        enabled: true,
+        env: {
+          UPLOAD_POST_API_KEY: "${UPLOAD_POST_API_KEY}",
+          META_PAGE_ACCESS_TOKEN: "${META_PAGE_ACCESS_TOKEN}",
+          LINKEDIN_ACCESS_TOKEN: "${LINKEDIN_ACCESS_TOKEN}",
+          YOUTUBE_CLIENT_ID: "${YOUTUBE_CLIENT_ID}",
+          YOUTUBE_CLIENT_SECRET: "${YOUTUBE_CLIENT_SECRET}",
+          YOUTUBE_REFRESH_TOKEN: "${YOUTUBE_REFRESH_TOKEN}",
+          BREVO_API_KEY: "${BREVO_API_KEY}",
+        },
+      },
+      "novia-veille": { enabled: true },
+      "novia-podcast": { enabled: true },
+      "novia-video": { enabled: true },
+    },
+  },
+  cron: { skipMissedJobs: true },
+}

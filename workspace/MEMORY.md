@@ -1,0 +1,12 @@
+# MEMORY.md — Mémoire longue de Novia Com
+
+> Relue seulement en session directe avec une personne de l'équipe. Distillée depuis `memory/` chaque lundi par la boucle d'apprentissage. Jamais de données clients, jamais de secrets.
+
+## Décisions de l'équipe
+(vide au départ)
+
+## Ce qui a marché, ce qui n'a pas marché
+(vide au départ)
+
+## Préférences durables
+(vide au départ)

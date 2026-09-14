@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "status": "canonical",
+  "agent_id": "novia-com",
+  "client": "IMMO9 (Toulouse Immo9)",
+  "precedence": [
+    "doctrine/LINES.md",
+    "doctrine/STUDIO_CONTRACT.json",
+    "AGENTS.md",
+    "rules/*.md",
+    "doctrine/*.md"
+  ],
+  "language": {
+    "default": "fr",
+    "public_register": "vouvoiement",
+    "mixing_languages_in_one_asset_forbidden": true
+  },
+  "formats": {
+    "ids": ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"],
+    "carousel": { "canvas": "1080x1350", "slides_min": 5, "slides_max": 8 },
+    "infographic": { "canvas": ["1080x1350", "1080x1080"] },
+    "short_video": { "canvas": "1080x1920", "duration_seconds": [30, 60], "subtitles_required": true },
+    "thumbnail": { "canvas": "1280x720", "variants": 2 },
+    "newsletter": { "width_px": 640, "words": [300, 600] },
+    "declinaisons": ["9:16", "1:1", "16:9", "1.91:1"]
+  },
+  "personas": ["P1", "P2", "P3", "P4"],
+  "validation": {
+    "max_human_validations_per_standard_piece": 2,
+    "go1_words": ["go", "ok pour moi", "on part là-dessus", "valide", "valide le concept"],
+    "go2_words": ["go publie", "publie", "publie-le", "tu peux publier", "envoie la newsletter"],
+    "never_approval": ["👍", "ok", "vas-y", "super", "top", "merci"],
+    "reply_to_card_required": true,
+    "approval_ttl_hours": 24,
+    "presented_expiry_days": 7,
+    "approvers_file": "state/approvers.json",
+    "publication_autonomy_forbidden": true
+  },
+  "quality": {
+    "narrative_minimum_score": 85,
+    "hard_fails": ["source_missing", "red_line", "compliance", "personal_data", "ai_visual_as_real_photo", "individual_advice"],
+    "duplicate_window_days": 60,
+    "minimum_observations_for_format_decision": 6
+  },
+  "budget": {
+    "currency": "EUR",
+    "paid_production_requires_announcement": true,
+    "default_ceiling_per_piece": 2.0,
+    "monthly_ceiling": 60.0,
+    "crons_may_spend": false,
+    "ledger": "learning/BUDGET_LEDGER.md",
+    "note": "Plafonds à confirmer avec David à l'acte 1."
+  },
+  "crons": {
+    "timezone": "Europe/Paris",
+    "require_onboarding_complete": true,
+    "silent_when_nothing": true,
+    "max_proposals_per_day": 2
+  },
+  "compliance": {
+    "no_return_promises": true,
+    "risk_mention_required_on_investment_content": true,
+    "no_fabricated_urgency": true,
+    "no_individual_tax_or_legal_advice": true,
+    "no_client_data": true,
+    "testimonials_require_written_consent": true,
+    "ai_visuals_never_presented_as_real": true
+  },
+  "memory": {
+    "daily_journal": "memory/",
+    "long_term": "MEMORY.md",
+    "learning_dir": "learning/",
+    "never_store": ["client_data", "secrets", "private_channel_content"]
+  },
+  "onboarding": {
+    "state_file": "state/onboarding.json",
+    "acts": ["act0_diagnostic", "act1_identite_equipe", "act2_voix", "act3_lignes_personas_charte", "act4_calibration", "complete"],
+    "production_allowed_from": "act4_calibration",
+    "publication_allowed_from": "complete"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "Filtres de la veille. include = mots du sujet (obligatoire pour toute source de type presse). cities = villes (information, pas filtre). exclude = écarte l'item. reddit = subreddits et termes (lecture OAuth optionnelle).",
+  "include": [
+    "immobilier", "logement", "vefa", "promoteur", "promotion immobilière", "prêt à taux zéro", "ptz", "taux immobilier", "taux de crédit",
+    "crédit immobilier", "primo-accédant", "primo-accédants", "investissement locatif", "locatif intermédiaire", "dpe", "loi de finances",
+    "défiscalisation", "pinel", "denormandie", "bailleur", "frais de notaire", "prix du neuf", "prix de l'immobilier", "mise en vente",
+    "permis de construire", "programme neuf", "appartement neuf", "résidence principale", "copropriété", "acquéreur", "acheteurs", "notaires"
+  ],
+  "cities": ["toulouse", "bordeaux", "montpellier", "nantes", "rennes", "occitanie", "nouvelle-aquitaine", "pays de la loire", "bretagne"],
+  "exclude": ["people", "horoscope", "football", "rugby", "faits divers", "fusillade", "série tv"],
+  "reddit": {
+    "subreddits": ["vosfinances", "immobilier", "Toulouse", "bordeaux", "Montpellier", "nantes", "rennes"],
+    "terms": ["neuf", "vefa", "ptz", "taux zéro", "primo", "promoteur", "appartement", "crédit", "notaire", "investissement locatif", "défiscalisation", "dpe"]
+  }
+}

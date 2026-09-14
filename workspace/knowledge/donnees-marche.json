@@ -1,0 +1,17 @@
+{
+  "_comment": "Données de l'infographie mensuelle. Remplies chaque mois par l'agent (à partir des sources officielles et professionnelles) ou par l'équipe, avec source et date pour chaque chiffre. Un chiffre sans source n'est pas rendu.",
+  "month": "",
+  "rates": [
+    {"label": "Taux moyen sur 15 ans", "value": "", "unit": "%", "source": "", "date": ""},
+    {"label": "Taux moyen sur 20 ans", "value": "", "unit": "%", "source": "", "date": ""},
+    {"label": "Taux moyen sur 25 ans", "value": "", "unit": "%", "source": "", "date": ""}
+  ],
+  "prices": [
+    {"city": "Toulouse", "value": "", "unit": "€/m² neuf", "source": "", "date": ""},
+    {"city": "Bordeaux", "value": "", "unit": "€/m² neuf", "source": "", "date": ""},
+    {"city": "Montpellier", "value": "", "unit": "€/m² neuf", "source": "", "date": ""},
+    {"city": "Nantes", "value": "", "unit": "€/m² neuf", "source": "", "date": ""},
+    {"city": "Rennes", "value": "", "unit": "€/m² neuf", "source": "", "date": ""}
+  ],
+  "note": ""
+}

@@ -1,0 +1,21 @@
+{
+  "_comment": "Événements récurrents et datés. kind: reglementaire | fiscal | marche | salon | interne. Les dates de salons restent confirmed:false tant que l'équipe n'a pas vérifié l'édition. important:true déclenche la séquence annonce/pédagogie/rappel/bilan.",
+  "events": [
+    {"name": "Publication mensuelle des taux de crédit (Observatoire Crédit Logement / CSA, Banque de France)", "kind": "marche", "recurrence": {"type": "monthly", "day": 5}, "source": "https://www.lobservatoirecreditlogement.fr/", "note": "matière de l'infographie mensuelle"},
+    {"name": "Ouverture de la déclaration de revenus", "kind": "fiscal", "recurrence": {"type": "yearly", "month": 4, "day": 10}, "important": true, "source": "https://www.impots.gouv.fr/", "note": "date exacte annoncée chaque année par la DGFiP ; contenus : revenus fonciers, dispositifs"},
+    {"name": "Avis de taxe foncière", "kind": "fiscal", "recurrence": {"type": "yearly", "month": 9, "day": 1}, "source": "https://www.impots.gouv.fr/", "note": "rappel exonération temporaire des logements neufs, selon la commune"},
+    {"name": "Présentation du projet de loi de finances", "kind": "reglementaire", "recurrence": {"type": "yearly", "month": 10, "day": 1}, "important": true, "source": "https://www.budget.gouv.fr/", "note": "mesures logement à surveiller jusqu'au vote en décembre"},
+    {"name": "Vote de la loi de finances", "kind": "reglementaire", "recurrence": {"type": "yearly", "month": 12, "day": 20}, "important": true, "source": "https://www.legifrance.gouv.fr/", "note": "contenu « ce qui change au 1er janvier »"},
+    {"name": "Entrée en vigueur des mesures de l'année", "kind": "reglementaire", "recurrence": {"type": "yearly", "month": 1, "day": 1}, "important": true, "source": "https://www.service-public.fr/", "note": "PTZ, plafonds, DPE, dispositifs"},
+    {"name": "Rentrée : reprise des projets d'achat", "kind": "marche", "recurrence": {"type": "yearly", "month": 9, "day": 8}, "note": "pic de recherche immobilière"},
+    {"name": "Chiffres trimestriels de la promotion immobilière (FPI)", "kind": "marche", "recurrence": {"type": "yearly", "month": 2, "day": 20}, "source": "https://fpifrance.fr/"},
+    {"name": "Chiffres trimestriels de la promotion immobilière (FPI)", "kind": "marche", "recurrence": {"type": "yearly", "month": 5, "day": 20}, "source": "https://fpifrance.fr/"},
+    {"name": "Chiffres trimestriels de la promotion immobilière (FPI)", "kind": "marche", "recurrence": {"type": "yearly", "month": 9, "day": 20}, "source": "https://fpifrance.fr/"},
+    {"name": "Chiffres trimestriels de la promotion immobilière (FPI)", "kind": "marche", "recurrence": {"type": "yearly", "month": 11, "day": 20}, "source": "https://fpifrance.fr/"},
+    {"name": "Salon de l'immobilier de Toulouse", "kind": "salon", "city": "Toulouse", "recurrence": {"type": "yearly", "month": 3, "day": 15}, "confirmed": false, "note": "dates d'édition à confirmer par l'équipe"},
+    {"name": "Salon de l'immobilier de Bordeaux", "kind": "salon", "city": "Bordeaux", "recurrence": {"type": "yearly", "month": 10, "day": 10}, "confirmed": false, "note": "dates d'édition à confirmer par l'équipe"},
+    {"name": "Salon de l'immobilier de Montpellier", "kind": "salon", "city": "Montpellier", "recurrence": {"type": "yearly", "month": 3, "day": 20}, "confirmed": false, "note": "dates d'édition à confirmer par l'équipe"},
+    {"name": "Salon de l'immobilier de Nantes", "kind": "salon", "city": "Nantes", "recurrence": {"type": "yearly", "month": 11, "day": 15}, "confirmed": false, "note": "dates d'édition à confirmer par l'équipe"},
+    {"name": "Salon de l'immobilier de Rennes", "kind": "salon", "city": "Rennes", "recurrence": {"type": "yearly", "month": 10, "day": 5}, "confirmed": false, "note": "dates d'édition à confirmer par l'équipe"}
+  ]
+}

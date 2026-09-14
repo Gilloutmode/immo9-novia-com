@@ -1,0 +1,9 @@
+{
+  "_comment": "Mots et formules interdits dans tout contenu public IMMO9 (contrôlés par caption_check.py). À compléter à l'acte 2.",
+  "banned": [
+    "opportunité à ne pas manquer", "à ne pas manquer", "dernières unités", "exceptionnel", "incroyable", "n'hésitez pas",
+    "découvrez", "boostez", "game changer", "investissement sûr", "rendement garanti", "placement en or", "prix imbattable",
+    "dans un monde où", "il est important de noter", "en conclusion", "révolutionnaire", "ultime", "sans engagement",
+    "gratuit*", "urgent", "dernière chance", "offre limitée", "profitez-en", "top départ"
+  ]
+}

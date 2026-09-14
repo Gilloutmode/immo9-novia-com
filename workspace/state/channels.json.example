@@ -1,0 +1,10 @@
+{"_comment": "Canaux de travail et adaptateurs de publication. Copier en channels.json. Les secrets ne sont jamais ici : ils vivent dans skills.entries.novia-publish.env de la configuration OpenClaw.",
+ "telegram_group_id": "-1001234567890",
+ "channels": {
+   "linkedin": {"adapter": "upload_post", "user": "immo9", "platform": "linkedin"},
+   "instagram": {"adapter": "upload_post", "user": "immo9", "platform": "instagram"},
+   "facebook": {"adapter": "upload_post", "user": "immo9", "platform": "facebook"},
+   "youtube": {"adapter": "upload_post", "user": "immo9", "platform": "youtube"},
+   "tiktok": {"adapter": "upload_post", "user": "immo9", "platform": "tiktok"},
+   "newsletter": {"adapter": "brevo", "sender": {"name": "IMMO9", "email": "news@toulouseimmo9.com"}, "list_ids": {"P1": [], "P2": [], "P3": [], "P4": []}, "send": false}
+ }}

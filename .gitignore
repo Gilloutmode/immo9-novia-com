@@ -1,0 +1,18 @@
+# État d'exécution du workspace (propre à chaque installation)
+workspace/outbox/*
+!workspace/outbox/.gitkeep
+workspace/memory/*
+!workspace/memory/.gitkeep
+workspace/state/*.json
+!workspace/state/onboarding.json
+!workspace/state/*.json.example
+workspace/learning/*.md.bak
+*.tmp
+*.bak-*
+__pycache__/
+node_modules/
+.DS_Store
+# Secrets : jamais
+*.env
+.env*
+!config/env.example
