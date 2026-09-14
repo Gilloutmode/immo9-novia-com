@@ -31,7 +31,7 @@ docs/                 installation pas à pas, architecture, matrice des 32 fonc
 5. Dans Telegram : « Commençons l'onboarding ». L'agent mène cinq actes (diagnostic, équipe, voix, lignes rouges et charte, calibration). Tant que ce n'est pas terminé, il ne produit rien de publiable.
 6. À la fin de l'onboarding : `bash crons/install-crons.sh --enable-p1`, puis une première publication test avec « Go publie ».
 
-**Avec Claude Code sur le serveur** : coller le prompt de `docs/PROMPT-CLAUDE-CODE.md` ; il guide chaque étape, vérifie, et n'écrit rien sans confirmation.
+**Avec Claude Code sur le serveur** : coller le prompt de `docs/PROMPT-CLAUDE-CODE.md` ; il commence par toutes les vérifications préalables (version d'OpenClaw, gateway, existant, outils, réseau, tests hors ligne), pose les questions qui dépendent de votre environnement (Telegram, modèles, connecteurs, mémoire, rendu, coûts), puis guide chaque étape sans rien écrire sans confirmation.
 
 ## Comment l'agent travaille
 - **Trois régimes**, issus de la liste de besoins d'IMMO9 : *Auto* (veilles, déclinaisons, transcriptions, reporting : livré dans le groupe, jamais publié), *Semi-auto* (posts, carrousels, vidéos, newsletters : présentés, puis « Go »), *Assistant* (templates, campagnes, calendrier, recommandations : à la demande).
