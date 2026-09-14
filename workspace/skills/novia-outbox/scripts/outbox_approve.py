@@ -37,19 +37,20 @@ def main():
     text = norm(args.text)
     if len(text) > 300:
         sys.exit("REFUS : message trop long pour valoir approbation (>300 caractères).")
-    negations = ("pas ", "non ", "stop", "attends", "jamais", "sauf")
-    if any(text.startswith(n) or (" " + n) in (" " + text) for n in negations):
+    if "?" in args.text:
+        sys.exit("REFUS : le message est une question, pas une approbation.")
+    negations = ("ne ", "n'", "pas", "non", "rien", "jamais", "sauf", "stop", "attend", "plus tard", "pas encore", "annule", "surtout pas")
+    if any((" " + n) in (" " + text + " ") or text.startswith(n) for n in negations):
         sys.exit("REFUS : le message contient une négation ou une réserve ; demander une réponse claire.")
-
-    words = val.get("go2_words" if args.stage == "go2" else "go1_words", [])
+    words = [norm(w) for w in val.get("go2_words" if args.stage == "go2" else "go1_words", [])]
     if args.stage == "go1":
-        words = list(words) + list(val.get("go2_words", []))  # un « Go publie » vaut aussi Go 1
-    if not any(norm(w) in text for w in words):
-        sys.exit("REFUS : « %s » ne contient aucun mot d'approbation (%s)." % (args.text, ", ".join(words)))
+        words += [norm(w) for w in val.get("go2_words", [])]  # un « Go publie » vaut aussi Go 1
     never = [norm(w) for w in val.get("never_approval", [])]
     if text in never:
         sys.exit("REFUS : « %s » ne vaut jamais approbation." % args.text)
-
+    lead = text.lstrip("!.:,;- ")
+    if not any(lead == w or lead.startswith(w + " ") or lead.startswith(w + ",") or lead.startswith(w + ".") or lead.startswith(w + "!") for w in sorted(words, key=len, reverse=True)):
+        sys.exit("REFUS : le message doit commencer par une formule d'approbation (%s) ; ici : « %s »." % (", ".join(words), args.text))
     if not m.get("presented_at"):
         sys.exit("REFUS : la pièce n'a pas été présentée (outbox_present.py).")
     ttl = timedelta(hours=float(val.get("approval_ttl_hours", 24)))

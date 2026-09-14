@@ -24,6 +24,10 @@ tn "Go publie refusé : personne non autorisée" python3 skills/novia-outbox/scr
 tn "Go publie refusé : pouce" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "👍"
 tn "Go publie refusé : ok seul" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "ok"
 tn "Go publie refusé : négation" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "non, pas go publie"
+tn "Go publie refusé : « ne publie rien »" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "ne publie rien"
+tn "Go publie refusé : question" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "est-ce que je publie ?"
+tn "Go publie refusé : mot noyé dans une phrase" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "je te dis go publie"
+tn "Go publie refusé : report" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "Go publie plus tard"
 t "Go publie accepté (personne autorisée, réponse claire)" python3 skills/novia-outbox/scripts/outbox_approve.py "$ID" --stage go2 --by 123456789 --text "Go publie"
 python3 - "outbox/$ID/manifest.json" <<'PY'
 import json,sys; p=sys.argv[1]; m=json.load(open(p)); m["captions"]["linkedin"]="Test. Source : https://example.org"; json.dump(m,open(p,"w"))
