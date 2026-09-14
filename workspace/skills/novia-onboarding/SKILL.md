@@ -4,7 +4,7 @@ description: "Onboarding de Novia Com chez IMMO9 en cinq actes : diagnostic (act
 metadata: {"openclaw": {"emoji": "🧭", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-onboarding — apprendre IMMO9 avant de produire pour IMMO9
+# novia-onboarding : apprendre IMMO9 avant de produire pour IMMO9
 
 ## Règles de conduite (tous les actes)
 - Un message = une décision. Jamais deux questions dans un message.
@@ -32,7 +32,7 @@ metadata: {"openclaw": {"emoji": "🧭", "requires": {"bins": ["python3"]}}}
 
 ## Acte 4 · Calibration (équipe communication)
 - Produire trois pièces test gratuites (un post F1, un carrousel F2, un digest de veille), présentées comme des tests. Corriger selon les retours, consigner dans `TASTE.md`.
-- `onboarding_state.py --check` puis `--set complete` quand tout est vert. Activer les crons du palier 1 (`scripts/install-crons.sh --enable-p1`).
+- `onboarding_state.py --check` puis `--set complete` quand tout est vert. Activer les crons du palier 1 (`crons/install-crons.sh --enable-p1`).
 
 ## Après
 Rappeler à l'équipe les deux mots qui comptent (« Go », « Go publie »), et que le silence est une réponse valide.

@@ -23,22 +23,23 @@ Le diagnostic liste ce qui manque. Les avertissements sur l'onboarding et la cha
 3. Identifiants : `openclaw directory` (une fois le compte ajouté) ou @userinfobot pour les personnes, et l'identifiant du groupe (commence par `-100`).
 4. Remplir `workspace/state/approvers.json` (personnes autorisées à dire « Go » et « Go publie ») et `workspace/state/channels.json` (`telegram_group_id`, adaptateurs de publication). Exemples : les fichiers `.example` voisins.
 
-## 3. Installer l'agent
+## 3. Variables d'environnement (avant l'installation)
+Copier `config/env.example`, remplir ce qui est disponible (au minimum `NOVIA_TELEGRAM_BOT_TOKEN`), et déclarer ces variables dans l'environnement du service gateway (unité systemd gérée par `openclaw daemon` : fichier d'environnement référencé par l'unité, ou export dans le shell qui lance le gateway). Jamais dans le dépôt. Exporter aussi ces variables dans le shell qui va lancer l'installation : l'installateur ne lit que leur présence (pour décider quoi configurer) et référence leur nom dans la configuration, jamais leur valeur.
+
+## 4. Installer l'agent
 ```bash
-bash scripts/install.sh                 # simulation : montre chaque action
-export NOVIA_TELEGRAM_BOT_TOKEN='123456:AA…'
-bash scripts/install.sh --apply          # écrit : agent, compte Telegram, configuration, skills partagés
+bash scripts/install.sh                 # simulation : montre chaque action, valide le fragment de configuration
+bash scripts/install.sh --apply          # écrit : agent, configuration (dont compte Telegram), skills partagés, crons
 ```
 Ce que fait `--apply` :
+- sauvegarde de `openclaw.json` (`.bak-novia-<date>`) ;
 - `openclaw agents add novia-com --workspace <dépôt>/workspace` (un agent isolé, sans toucher aux autres) ;
-- `openclaw channels add --channel telegram --account novia-com --token …` puis `openclaw agents bind --agent novia-com --bind telegram:novia-com` ;
-- sauvegarde de `openclaw.json` puis `openclaw config patch` avec `config/openclaw.novia-com.patch.json5` (politique d'outils de l'agent, allowlists Telegram, variables des connecteurs, `cron.skipMissedJobs`) ;
-- `openclaw skills install <dossier> --global` pour chaque skill de `skills-shared/`.
-Si votre configuration Telegram a déjà un compte, OpenClaw peut demander `channels.telegram.defaultAccount` : le définir sur votre compte existant (`openclaw config set channels.telegram.defaultAccount default`).
+- `openclaw config patch` avec `config/openclaw.novia-com.patch.json5` : politique d'outils de l'agent, compte Telegram `novia-com` (jeton référencé par `NOVIA_TELEGRAM_BOT_TOKEN`, DM et groupe en allowlist des personnes de `approvers.json`, groupe déclaré dans `groups`), variables des connecteurs présentes, `cron.skipMissedJobs` ;
+- `openclaw agents bind --agent novia-com --bind telegram:novia-com` ;
+- `openclaw skills install <dossier> --global` pour chaque skill de `skills-shared/` (visible par tous vos agents : c'est la seule modification hors de l'agent, avec `cron.skipMissedJobs`) ;
+- déclaration des 12 crons, tous désactivés, si le gateway répond.
+L'installateur refuse d'écrire tant que `state/approvers.json` contient les identifiants d'exemple. Si votre configuration Telegram a déjà un compte, définir `channels.telegram.defaultAccount` sur votre compte existant (`openclaw config set channels.telegram.defaultAccount default`).
 Modèle : l'agent hérite de `agents.defaults.model`. Pour imposer un modèle : `--model openai/gpt-6-astra` par exemple.
-
-## 4. Variables d'environnement et redémarrage
-Copier `config/env.example`, remplir ce qui est disponible, et déclarer ces variables dans l'environnement du service gateway (unité systemd gérée par `openclaw daemon` : un fichier d'environnement référencé par l'unité, ou l'export dans le shell qui lance le gateway). Jamais dans le dépôt.
 ```bash
 openclaw daemon restart && openclaw doctor
 bash scripts/doctor.sh
@@ -58,7 +59,7 @@ Le passage à `complete` est refusé tant que les conditions ne sont pas remplie
 bash crons/install-crons.sh --enable-p1     # 7 crons du palier 1 actifs, 5 du palier 2 désactivés
 openclaw cron list
 ```
-Première publication réelle : une pièce test, « Go publie » dans Telegram, vérification sur la plateforme. Avant cela, `python3 workspace/skills/novia-publish/scripts/publish.py <id> --dry-run` montre ce qui partirait.
+Première publication réelle : une pièce, « Go publie » dans Telegram, vérification sur la plateforme. Avant cela, `python3 workspace/skills/novia-publish/scripts/publish.py <id> --preview` montre ce qui partirait, sans approbation ni appel externe.
 
 ## 7. Chaque semaine
 ```bash
@@ -75,4 +76,4 @@ bash scripts/acceptance.sh        # tests hors ligne : verrous d'approbation et 
 ```
 
 ## Désinstaller
-`openclaw cron rm` sur les jobs `novia-com:*`, `openclaw agents delete novia-com`, retirer le compte Telegram (`openclaw channels remove --channel telegram --account novia-com`), restaurer la sauvegarde `openclaw.json.bak-novia-<date>` si besoin.
+`openclaw cron rm` sur les jobs « Novia · … », `openclaw agents delete novia-com`, retirer le compte Telegram (`openclaw channels remove --channel telegram --account novia-com`) et les skills partagés si vous ne les utilisez pas ailleurs, ou restaurer la sauvegarde `openclaw.json.bak-novia-<date>`.

@@ -4,7 +4,7 @@ description: "Calendrier éditorial IMMO9 : marronniers immobilier, échéances 
 metadata: {"openclaw": {"emoji": "📅", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-calendrier — savoir ce qui arrive avant que ça arrive
+# novia-calendrier : savoir ce qui arrive avant que ça arrive
 
 ## Usage
 ```bash

@@ -6,8 +6,9 @@ Prérequis (voir connectors/README.md) :
 - variable META_PAGE_ACCESS_TOKEN ;
 - réglages state/channels.json : {"adapter": "meta_graph", "ig_user_id": "1784…", "fb_page_id": "1234…",
   "public_base_url": "https://media.exemple.fr/novia"} ;
-- Instagram exige une URL publique (HTTPS) pour chaque image ou vidéo : public_base_url doit servir le dossier outbox/
-  (par exemple via nginx en lecture seule sur ce seul dossier). Sans cela, utiliser l'adaptateur upload_post.
+- Instagram exige une URL publique (HTTPS) pour chaque image ou vidéo : publish.py copie les seuls médias à publier
+  dans workspace/export/<id>/ ; public_base_url doit servir CE dossier export/ (jamais outbox/, qui contient manifests,
+  brouillons et historique). Nettoyer export/ après publication. Sans cela, utiliser l'adaptateur upload_post.
 Version d'API : GRAPH_VERSION ci-dessous, à aligner sur la version courante documentée par Meta.
 """
 import os
@@ -25,9 +26,10 @@ BASE = "https://graph.facebook.com/%s" % GRAPH_VERSION
 def _public_url(settings, asset_path, manifest):
     base = settings.get("public_base_url")
     if not base:
-        raise RuntimeError("réglage manquant : public_base_url (Instagram exige une URL publique pour les médias)")
-    rel = "%s/%s" % (manifest["id"], os.path.basename(asset_path))
-    return base.rstrip("/") + "/" + urllib.parse.quote(rel)
+        raise RuntimeError("réglage manquant : public_base_url (Instagram exige une URL publique pour les médias, servis depuis export/)")
+    marker = os.sep + "outbox" + os.sep + manifest["id"] + os.sep
+    rel = asset_path.split(marker, 1)[1] if marker in asset_path else os.path.basename(asset_path)
+    return base.rstrip("/") + "/" + urllib.parse.quote("%s/%s" % (manifest["id"], rel.replace(os.sep, "/")))
 
 
 def _post(url, params):
@@ -56,7 +58,7 @@ def publish(channel, settings, caption, assets, manifest):
                 children.append(c["id"])
             container = _post("%s/%s/media" % (BASE, ig), {"media_type": "CAROUSEL", "children": ",".join(children), "caption": caption, "access_token": token})
         pub = _post("%s/%s/media_publish" % (BASE, ig), {"creation_id": container["id"], "access_token": token})
-        return {"id": pub.get("id"), "url": None, "raw": pub}
+        return {"state": "published" if pub.get("id") else "submitted", "id": pub.get("id"), "url": None, "raw": pub}
     if channel == "facebook":
         page = settings.get("fb_page_id")
         if not page:
@@ -67,5 +69,5 @@ def publish(channel, settings, caption, assets, manifest):
         else:
             res = _post("%s/%s/feed" % (BASE, page), {"message": caption, "access_token": token})
         pid = res.get("post_id") or res.get("id")
-        return {"id": pid, "url": ("https://www.facebook.com/%s" % pid) if pid else None, "raw": res}
+        return {"state": "published" if pid else "submitted", "id": pid, "url": ("https://www.facebook.com/%s" % pid) if pid else None, "raw": res}
     raise RuntimeError("canal non géré par meta_graph : %s" % channel)

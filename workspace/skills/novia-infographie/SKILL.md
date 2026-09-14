@@ -4,7 +4,7 @@ description: "Infographie mensuelle IMMO9 taux de crédit et prix du neuf par vi
 metadata: {"openclaw": {"emoji": "📊", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-infographie — le repère chiffré du mois, sourcé sur l'image
+# novia-infographie : le repère chiffré du mois, sourcé sur l'image
 
 ## Procédure (cron `infographie-mensuelle`, le 2 du mois, ou à la demande)
 1. Mettre à jour `knowledge/donnees-marche.json` : taux moyens (Observatoire Crédit Logement / CSA, Banque de France), prix du neuf par ville (sources professionnelles ou notariales), chaque valeur avec `source` (nom + URL) et `date`. Un chiffre sans source reste vide et n'est pas rendu.

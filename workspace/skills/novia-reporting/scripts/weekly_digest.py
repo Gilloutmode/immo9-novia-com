@@ -28,10 +28,10 @@ def main():
     if not published and not recent:
         print("NO_REPLY")
         return
-    per_piece = defaultdict(dict)
+    per_piece = defaultdict(dict)  # clé : (pièce, canal) → {métrique: valeur}
     for m in recent:
         try:
-            per_piece[m[1]][m[3]] = float(str(m[4]).replace(",", "."))
+            per_piece[(m[1], m[2])][m[3]] = float(str(m[4]).replace(",", "."))
         except ValueError:
             continue
     print("📈 Bilan des %d derniers jours" % args.days)
@@ -39,13 +39,13 @@ def main():
     for l in published[:10]:
         print("  - " + l)
     if per_piece:
-        score = {pid: sum(v for k, v in vals.items() if k in ("reach", "impressions", "vues", "views", "engagement", "clics", "clicks")) for pid, vals in per_piece.items()}
-        best = max(score, key=score.get)
-        worst = min(score, key=score.get)
-        print("Meilleure pièce (somme des métriques disponibles) : %s (%s)" % (best, ", ".join("%s=%g" % kv for kv in per_piece[best].items())))
-        if worst != best:
-            print("Plus faible : %s (%s)" % (worst, ", ".join("%s=%g" % kv for kv in per_piece[worst].items())))
-    missing = [l.split(" · ")[1] for l in published if l.split(" · ")[1] not in per_piece]
+        for metric in ("reach", "impressions", "vues", "views", "engagement", "clics", "clicks"):
+            rows = [(k, v[metric]) for k, v in per_piece.items() if metric in v]
+            if len(rows) >= 2:
+                rows.sort(key=lambda kv: kv[1], reverse=True)
+                print("%s : meilleure %s/%s (%g), plus faible %s/%s (%g), sur %d observations" % (metric, rows[0][0][0], rows[0][0][1], rows[0][1], rows[-1][0][0], rows[-1][0][1], rows[-1][1], len(rows)))
+    with_metrics = {k[0] for k in per_piece}
+    missing = [l.split(" · ")[1] for l in published if l.split(" · ")[1] not in with_metrics]
     if missing:
         print("Sans métriques encore : " + ", ".join(sorted(set(missing))))
     n = len(published)

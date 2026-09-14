@@ -1,6 +1,7 @@
 # Limites connues et points de vigilance
 
 ## Côté agent
+- **Verrous dans le workspace, pas hors de portée de l'agent** : approbation, publication et onboarding sont vérifiés par des scripts que l'agent exécute. Ils arrêtent l'erreur et la validation non autorisée ; ils n'arrêteraient pas un agent qui contournerait ses propres scripts. L'isolation système (publisher séparé) est la première priorité du palier 2 (`docs/ROADMAP.md`, `docs/SECURITE.md`).
 - **Rendu HTML** : les carrousels et infographies sont rendus par Chromium headless. Sans Chromium sur le serveur, l'outil `browser` d'OpenClaw fait les captures (plus lent, moins automatisable). Recommandé : `apt install chromium`.
 - **Texte sur les audiograms** : le filtre `drawtext` de ffmpeg (libfreetype) est nécessaire pour incruster le titre ; le script détecte son absence et rend sans titre.
 - **Reddit** : lecture bloquée sans application OAuth ; volumes faibles, usage non commercial. Quora : pas d'API.

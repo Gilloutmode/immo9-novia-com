@@ -69,3 +69,30 @@ def add_history(manifest, event, by=None, note=None):
     manifest.setdefault("history", []).append({
         "at": now_iso(), "event": event, "by": by, "note": note,
     })
+
+
+def package_fingerprint(ws, manifest):
+    """Empreinte SHA-256 du package : légendes, fichiers (contenu), canaux, plafond. Change = approbation caduque."""
+    import hashlib
+    h = hashlib.sha256()
+    h.update(json.dumps(manifest.get("captions", {}), sort_keys=True, ensure_ascii=False).encode("utf-8"))
+    h.update(json.dumps(sorted(manifest.get("channels", [])), ensure_ascii=False).encode("utf-8"))
+    h.update(str(manifest.get("cost", {}).get("ceiling")).encode("utf-8"))
+    for a in sorted(manifest.get("assets", []), key=lambda x: x.get("file", "")):
+        f = ws / "outbox" / manifest["id"] / a.get("file", "")
+        h.update(a.get("file", "").encode("utf-8"))
+        if f.is_file():
+            with f.open("rb") as fh:
+                for chunk in iter(lambda: fh.read(65536), b""):
+                    h.update(chunk)
+    return h.hexdigest()
+
+
+def onboarding_status(ws):
+    return (read_json(ws / "state" / "onboarding.json", {}) or {}).get("status", "act0_diagnostic")
+
+
+def onboarding_rank(ws, status=None):
+    acts = load_contract(ws).get("onboarding", {}).get("acts", [])
+    st = status or onboarding_status(ws)
+    return acts.index(st) if st in acts else -1

@@ -1,7 +1,9 @@
 // Fragment de configuration OpenClaw pour l'agent Novia Com.
-// Appliqué par scripts/install.sh via `openclaw config patch --file` (fusion récursive des objets).
-// Les valeurs __WORKSPACE__ sont remplacées par l'installateur. Aucun secret ici : les jetons sont lus
-// dans l'environnement du gateway (fichier d'environnement du service OpenClaw ou variables exportées).
+// Appliqué par scripts/install.sh via `openclaw config patch --file` (fusion récursive des objets ; les tableaux
+// sont remplacés, c'est pourquoi les bindings ne passent jamais par ce fragment mais par `openclaw agents bind`).
+// __WORKSPACE__, les listes de personnes et le groupe sont remplis par l'installateur depuis state/*.json.
+// Aucun secret ici : le jeton Telegram est une référence à la variable d'environnement NOVIA_TELEGRAM_BOT_TOKEN,
+// et les variables des connecteurs ne sont injectées que si elles existent dans l'environnement du gateway.
 {
   agents: {
     entries: {
@@ -26,9 +28,10 @@
           name: "Novia Com",
           botToken: { source: "env", provider: "default", id: "NOVIA_TELEGRAM_BOT_TOKEN" },
           dmPolicy: "allowlist",
-          allowFrom: [],          // identifiants Telegram des personnes autorisées (rempli par install.sh depuis state/approvers.json)
+          allowFrom: [],          // DM : identifiants Telegram des personnes autorisées (state/approvers.json)
           groupPolicy: "allowlist",
-          groupAllowFrom: [],     // identifiant du groupe « Novia Com » (rempli depuis state/channels.json)
+          groupAllowFrom: [],     // dans les groupes : mêmes personnes
+          groups: {},             // rempli avec l'identifiant du groupe Novia Com : requireMention false, allowFrom = personnes
         },
       },
     },
@@ -47,7 +50,7 @@
           BREVO_API_KEY: "${BREVO_API_KEY}",
         },
       },
-      "novia-veille": { enabled: true },
+      "novia-veille": { enabled: true, env: { REDDIT_CLIENT_ID: "${REDDIT_CLIENT_ID}", REDDIT_CLIENT_SECRET: "${REDDIT_CLIENT_SECRET}" } },
       "novia-podcast": { enabled: true },
       "novia-video": { enabled: true },
     },

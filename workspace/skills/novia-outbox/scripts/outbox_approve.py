@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, read_json, load_contract  # noqa: E402
+from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, read_json, load_contract, package_fingerprint  # noqa: E402
 
 
 def norm(s):
@@ -21,8 +21,9 @@ def main():
     ap.add_argument("--stage", required=True, choices=["go1", "go2"])
     ap.add_argument("--by", required=True, help="identifiant Telegram de l'auteur du message")
     ap.add_argument("--text", required=True, help="texte exact du message")
-    ap.add_argument("--reply-to-card", action="store_true", default=True,
-                    help="le message répond à la carte de la pièce (obligatoire)")
+    ap.add_argument("--reply-to", default=None, help="identifiant du message Telegram auquel l'approbation répond (doit être la carte)")
+    ap.add_argument("--message-id", default=None, help="identifiant du message d'approbation")
+    ap.add_argument("--chat-id", default=None, help="identifiant du chat Telegram où l'approbation a été donnée")
     args = ap.parse_args()
 
     ws = find_workspace()
@@ -39,6 +40,9 @@ def main():
         sys.exit("REFUS : message trop long pour valoir approbation (>300 caractères).")
     if "?" in args.text:
         sys.exit("REFUS : le message est une question, pas une approbation.")
+    conditions = (" si ", " quand ", " lorsque ", " apres ", " des que ", " une fois ", " sous reserve", " a condition", " mais ", " sauf ")
+    if any(c in (" " + text + " ") for c in conditions):
+        sys.exit("REFUS : le message contient une condition ou une réserve ; demander une approbation sans condition.")
     negations = ("ne ", "n'", "pas", "non", "rien", "jamais", "sauf", "stop", "attend", "plus tard", "pas encore", "annule", "surtout pas")
     if any((" " + n) in (" " + text + " ") or text.startswith(n) for n in negations):
         sys.exit("REFUS : le message contient une négation ou une réserve ; demander une réponse claire.")
@@ -57,12 +61,22 @@ def main():
     presented = datetime.fromisoformat(m["presented_at"])
     if datetime.now(presented.tzinfo) - presented > ttl:
         sys.exit("REFUS : présentation trop ancienne (> %s h) ; re-présenter la pièce." % val.get("approval_ttl_hours", 24))
-    if args.stage == "go2" and m["status"] not in ("presented", "go1", "final_presented"):
-        sys.exit("REFUS : statut %s incompatible avec Go 2." % m["status"])
+    if args.stage == "go2" and m["status"] != "final_presented":
+        sys.exit("REFUS : Go 2 n'est accepté que sur un package final présenté (statut actuel : %s)." % m["status"])
+    if args.stage == "go2":
+        if m.get("is_test"):
+            sys.exit("REFUS : pièce test de calibration, jamais publiable.")
+        fp = package_fingerprint(ws, m)
+        if m.get("package_fingerprint") != fp:
+            sys.exit("REFUS : le package a changé depuis sa présentation (légendes, fichiers, canaux ou plafond) ; re-présenter.")
+        if m.get("card_message_id") and args.reply_to and str(args.reply_to) != str(m["card_message_id"]):
+            sys.exit("REFUS : le message ne répond pas à la carte de cette pièce (%s attendu, %s reçu)." % (m["card_message_id"], args.reply_to))
     if args.stage == "go1" and m["status"] not in ("presented", "final_presented"):
         sys.exit("REFUS : statut %s incompatible avec Go 1." % m["status"])
 
-    record = {"by": str(args.by), "name": who.get("name"), "at": now_iso(), "text": args.text}
+    record = {"by": str(args.by), "name": who.get("name"), "at": now_iso(), "text": args.text, "reply_to": args.reply_to,
+              "message_id": args.message_id, "chat_id": args.chat_id, "package_fingerprint": m.get("package_fingerprint"),
+              "channels": list(m.get("channels", [])), "ceiling": m.get("cost", {}).get("ceiling")}
     m["approvals"][args.stage] = record
     m["status"] = "go1" if args.stage == "go1" else "approved"
     add_history(m, "approved_%s" % args.stage, by=str(args.by), note=args.text)

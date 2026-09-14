@@ -3,7 +3,7 @@ name: elevenlabs-soundfx
 description: Générer des effets sonores professionnels, tendance et viraux avec ElevenLabs.
 ---
 
-# 🔊 ElevenLabs Sound Effects — Expert Prompting Skill
+# 🔊 ElevenLabs Sound Effects : Expert Prompting Skill
 
 > Générer des effets sonores professionnels, tendance et viraux avec ElevenLabs
 
@@ -298,12 +298,12 @@ Wind howling through mountain pass
 
 ## 🎓 RÈGLES D'OR
 
-1. **Sois descriptif mais pas trop long** — L'IA comprend le contexte
-2. **Utilise le vocabulaire pro** — Résultats plus précis
-3. **Pense en séquence** — Début → milieu → fin
-4. **Expérimente les sliders** — Duration et Influence changent tout
-5. **Génère plusieurs versions** — La magie est dans l'itération
-6. **Combine si complexe** — Mieux vaut 2 sons simples qu'1 compliqué raté
+1. **Sois descriptif mais pas trop long** : L'IA comprend le contexte
+2. **Utilise le vocabulaire pro** : Résultats plus précis
+3. **Pense en séquence** : Début → milieu → fin
+4. **Expérimente les sliders** : Duration et Influence changent tout
+5. **Génère plusieurs versions** : La magie est dans l'itération
+6. **Combine si complexe** : Mieux vaut 2 sons simples qu'1 compliqué raté
 
 ---
 
@@ -315,4 +315,4 @@ Wind howling through mountain pass
 
 ---
 
-*Skill créée pour David Benittah — Février 2026*
+*Skill créée pour David Benittah : Février 2026*

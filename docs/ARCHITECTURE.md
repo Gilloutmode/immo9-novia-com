@@ -61,8 +61,8 @@ sequenceDiagram
 | Élément | Emplacement | Versionné dans le dépôt |
 |---|---|---|
 | Charte, doctrine, connaissance, skills, gabarits | `workspace/` | oui : mis à jour par `git pull` |
-| État de l'installation (personnes, canaux, onboarding) | `workspace/state/*.json` | non (exemples versionnés) |
-| Pièces produites, journal, apprentissage | `workspace/outbox/`, `memory/`, `learning/` | non |
+| État de l'installation (personnes, canaux, onboarding, tokens de charte, mémoire longue) | `workspace/state/*.json`, `templates/_tokens.json`, `MEMORY.md` | non (exemples versionnés, créés par `install.sh`) |
+| Pièces produites, médias exportés, journal, apprentissage | `workspace/outbox/`, `export/`, `memory/`, `learning/*.md` | non (gabarits dans `learning/.templates/`) |
 | Configuration OpenClaw de l'agent | `openclaw.json` du serveur (fragment dans `config/`) | fragment oui, config non |
 | Crons | base d'état OpenClaw (manifeste dans `crons/crons.json`) | manifeste oui |
 | Secrets | environnement du service gateway | jamais |
@@ -70,6 +70,6 @@ sequenceDiagram
 
 ## Principes
 - **Un seul agent, isolé** : workspace, répertoire d'état et compte Telegram propres ; aucun accès aux autres agents ni aux portefeuilles clients.
-- **Les verrous sont dans le code** : approbation vérifiée par script (auteur, texte, délai), publication impossible sans enregistrement, onboarding fail-closed, coûts plafonnés par contrat, politique d'outils dans la configuration.
+- **Les verrous sont dans des scripts, pas seulement dans des consignes** : approbation vérifiée (auteur, formule, délai, empreinte du package), publication refusée sans enregistrement et hors onboarding terminé, coûts plafonnés par contrat, politique d'outils dans la configuration. Leur limite est décrite dans `docs/SECURITE.md` : ils ne s'imposent pas à un agent qui les contournerait, d'où le publisher isolé prévu au palier 2.
 - **Une seule vérité par pièce** : le manifest. Les crons et les scripts y écrivent ; l'agent ne « se souvient » pas d'une validation, il la lit.
 - **Mise à jour sans perte** : ce qui est versionné se met à jour, ce qui est local ne bouge pas.

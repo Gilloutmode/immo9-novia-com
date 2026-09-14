@@ -1,4 +1,4 @@
-# SOURCES_VEILLE.md — Ce que Novia Com a le droit de lire et de citer
+# SOURCES_VEILLE.md : Ce que Novia Com a le droit de lire et de citer
 
 > Liste machine dans `knowledge/sources-veille.json` (nom, URL, type, flux RSS s'il existe, fréquence de lecture, confiance). Ce fichier explique les niveaux et les règles. L'équipe ajoute ses sources locales à l'acte 3.
 

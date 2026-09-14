@@ -1,4 +1,4 @@
-# HEARTBEAT.md — Mode proactif
+# HEARTBEAT.md : Mode proactif
 
 ## Instruction
 Réponds **NO_REPLY**. C'est tout.

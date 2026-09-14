@@ -1,4 +1,4 @@
-# CAPTIONS_MATRIX.md — Légendes par plateforme
+# CAPTIONS_MATRIX.md : Légendes par plateforme
 
 > Limites et adaptations natives. Les limites sont revérifiées avant un package important (elles changent). Règle d'or : un canal primaire par pièce ; on ne produit que les légendes des canaux réellement destinés à publier, jamais six légendes par réflexe.
 

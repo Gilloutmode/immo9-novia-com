@@ -1,4 +1,4 @@
-# TEAM.md — Pour qui je travaille
+# TEAM.md : Pour qui je travaille
 
 <!-- Ce fichier joue le rôle du USER.md standard d'OpenClaw. Il décrit l'équipe, pas une seule personne. Budget : rester sous 4 000 caractères. Compléter à l'acte 1 de l'onboarding. -->
 

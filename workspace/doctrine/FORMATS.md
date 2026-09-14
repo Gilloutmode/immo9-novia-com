@@ -1,4 +1,4 @@
-# FORMATS.md — Les formats déclarés
+# FORMATS.md : Les formats déclarés
 
 > Un format est un contrat entre une intention, une surface et une métrique. Les neuf formats ci-dessous couvrent la liste de besoins IMMO9. Un format se déclare avant la première production ; il se juge après six observations au moins, jamais avant.
 

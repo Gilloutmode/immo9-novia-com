@@ -30,7 +30,10 @@ def parse_date(s):
         return None
     s = s.strip()
     try:
-        return parsedate_to_datetime(s)
+        d = parsedate_to_datetime(s)
+        if d is not None and d.tzinfo is None:
+            d = d.replace(tzinfo=timezone.utc)
+        return d
     except Exception:
         pass
     for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d"):
@@ -117,9 +120,13 @@ def main():
             continue
         kept = 0
         for it in items:
-            if not it["link"] or it["link"] in seen:
-                continue
-            if it["date"] and it["date"] < since:
+            try:
+                if not it["link"] or it["link"] in seen:
+                    continue
+                if it["date"] and it["date"] < since:
+                    continue
+            except Exception as e:  # une entrée défectueuse ne bloque pas la source
+                errors.append("%s : item ignoré (%s)" % (s["name"], str(e)[:60]))
                 continue
             text = "%s %s" % (it["title"], it["summary"])
             if s.get("type") == "presse" and s.get("scope") != "alert" and not matches(text, include, exclude):

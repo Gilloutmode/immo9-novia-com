@@ -1,4 +1,4 @@
-# rules/conformite-immobilier.md — Ce qu'un contenu IMMO9 ne dit jamais, et ce qu'il doit dire
+# rules/conformite-immobilier.md : Ce qu'un contenu IMMO9 ne dit jamais, et ce qu'il doit dire
 
 > Bloquant. Lu avant toute rédaction destinée au public. Complète `doctrine/LINES.md`. Ces règles ne sont pas un conseil juridique : elles fixent une ligne prudente que l'équipe IMMO9 et son conseil peuvent durcir, jamais assouplir sans décision de David.
 

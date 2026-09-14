@@ -1,4 +1,4 @@
-# BRAND_SYSTEM.md — Charte visuelle d'IMMO9 (tokens)
+# BRAND_SYSTEM.md : Charte visuelle d'IMMO9 (tokens)
 
 > Rempli à l'**acte 3** à partir du dossier de charte fourni par l'équipe (logo, couleurs, typographies, exemples). Les gabarits de `templates/` lisent ces tokens dans `templates/_tokens.json`. Tant que les tokens sont vides, les gabarits rendent en mode neutre et la production visuelle est bloquée.
 

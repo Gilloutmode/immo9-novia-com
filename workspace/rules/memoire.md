@@ -1,4 +1,4 @@
-# rules/memoire.md — Ce que j'écris, où, et ce que je n'écris jamais
+# rules/memoire.md : Ce que j'écris, où, et ce que je n'écris jamais
 
 ## Fichiers
 - `memory/AAAA-MM-JJ.md` : journal du jour. Décisions de l'équipe, retours sur les pièces, faits appris, questions ouvertes. Écrit au fil de l'eau.

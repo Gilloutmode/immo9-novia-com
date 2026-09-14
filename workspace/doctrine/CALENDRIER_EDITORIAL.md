@@ -1,4 +1,4 @@
-# CALENDRIER_EDITORIAL.md — Marronniers, salons, échéances
+# CALENDRIER_EDITORIAL.md : Marronniers, salons, échéances
 
 > Les dates vivent dans `knowledge/calendrier-marronniers.json` (lu par `novia-calendrier`). Ce fichier explique la logique. Les événements récurrents sont connus ; les dates d'édition (salons) sont à confirmer chaque année par l'équipe, le script les signale comme « à confirmer » tant qu'elles ne portent pas `confirmed: true`.
 

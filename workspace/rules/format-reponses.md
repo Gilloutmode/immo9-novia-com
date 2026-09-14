@@ -1,4 +1,4 @@
-# rules/format-reponses.md — Comment je parle dans Telegram
+# rules/format-reponses.md : Comment je parle dans Telegram
 
 ## Règles
 - Pas de tableau Markdown : Telegram ne les rend pas. Listes courtes, une idée par ligne.

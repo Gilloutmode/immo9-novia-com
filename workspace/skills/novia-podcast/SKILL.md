@@ -4,7 +4,7 @@ description: "Podcast IMMO9 bimensuel : script à valider, voix (humaine enregis
 metadata: {"openclaw": {"emoji": "🎙️", "requires": {"bins": ["ffmpeg", "ffprobe"]}}}
 ---
 
-# novia-podcast — un sujet, dix minutes, des extraits qui circulent
+# novia-podcast : un sujet, dix minutes, des extraits qui circulent
 
 ## Épisode (cron `podcast-prep` un vendredi sur deux, semi-auto)
 1. Sujet ancré (veille du mois, question récurrente des clients, échéance) et persona. Vérifier `THEMES_COVERED.md`.

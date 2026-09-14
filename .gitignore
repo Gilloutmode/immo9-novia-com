@@ -1,12 +1,18 @@
-# État d'exécution du workspace (propre à chaque installation)
+# Données propres à chaque installation (créées par scripts/install.sh depuis les exemples, jamais écrasées)
+workspace/state/*.json
+!workspace/state/*.json.example
+workspace/learning/*.md
+!workspace/learning/.templates/
+workspace/MEMORY.md
+workspace/templates/_tokens.json
+workspace/templates/_brand/*
+!workspace/templates/_brand/README.md
 workspace/outbox/*
 !workspace/outbox/.gitkeep
+workspace/export/
 workspace/memory/*
 !workspace/memory/.gitkeep
-workspace/state/*.json
-!workspace/state/onboarding.json
-!workspace/state/*.json.example
-workspace/learning/*.md.bak
+# Divers
 *.tmp
 *.bak-*
 __pycache__/

@@ -1,7 +1,7 @@
 # Sécurité et confidentialité
 
 ## Secrets
-- Aucun secret dans le dépôt, ni dans le workspace, ni dans les crons. Les jetons vivent dans l'environnement du service gateway ; la configuration ne contient que des références (`${VAR}`) et `install.sh` n'injecte que les variables présentes.
+- Aucun secret dans le dépôt, ni dans le workspace, ni dans les crons. Les jetons vivent dans l'environnement du service gateway ; la configuration ne contient que des références (jeton Telegram en `SecretRef` vers `NOVIA_TELEGRAM_BOT_TOKEN`, connecteurs en `${VAR}`) et `install.sh` n'injecte que les variables présentes, sans jamais les afficher.
 - L'agent a pour règle de ne jamais lire, citer ni copier un secret ; une clé manquante se signale par son nom.
 - Rotation : changer un jeton = mettre à jour la variable, redémarrer le gateway. Les jetons de plateformes sociales expirent ; le cron `sante` remonte les échecs de publication.
 
@@ -9,11 +9,12 @@
 - Agent isolé (`agents add`) : workspace, répertoire d'état et sessions propres. Pas d'accès aux autres agents ni au CRM.
 - Compte Telegram dédié avec allowlist des personnes et du groupe (`dmPolicy` et `groupPolicy` en `allowlist`). Une personne hors liste n'obtient pas de réponse.
 - Politique d'outils par agent (`config/openclaw.novia-com.patch.json5`) : profil `coding` avec exec, fichiers, navigateur, recherche, image et message ; outils élevés désactivés.
-- Le workspace ne contient aucune donnée client ; la charte l'interdit et les scripts ne lisent que le workspace.
+- Le workspace ne contient aucune donnée client ; la charte l'interdit et les scripts ne lisent que le workspace. L'agent n'a aucun accès configuré au CRM ni à la mémoire des autres agents.
 
 ## Publication
-- Aucune publication sans enregistrement `go2` par une personne de `state/approvers.json`, en réponse à la carte, avec un mot d'approbation, dans les 24 heures ; vérifié par `outbox_approve.py` et `publish.py`, testé par `scripts/acceptance.sh`.
-- Les crons n'ont pas le droit de publier ni de dépenser (contrat et prompts).
+- Aucune publication sans enregistrement `go2` par une personne de `state/approvers.json`, en réponse à la carte, avec une formule d'approbation en tête de message, sans condition ni question, dans les 24 heures, sur un package final dont l'empreinte (légendes, fichiers, canaux, plafond) n'a pas changé ; vérifié par `outbox_approve.py` et `publish.py`, testé par `scripts/acceptance.sh`.
+- **Portée réelle de ces verrous, à lire avant de promettre quoi que ce soit** : ils protègent contre l'erreur de l'agent, contre une validation donnée par une personne non autorisée, et contre une publication d'un contenu modifié après validation. Ils ne protègent pas contre un agent qui déciderait d'appeler un adaptateur directement ou d'écrire lui-même un enregistrement d'approbation : l'agent a l'exécution de commandes et l'écriture de son workspace, et il reçoit les variables des connecteurs. La protection contre ce cas est l'isolation système décrite dans `docs/ROADMAP.md` (publisher séparé, vérification côté gateway, secrets hors de portée de l'agent). Tant qu'elle n'est pas en place, le garde-fou est humain : le groupe Telegram voit toute publication annoncée par l'agent, et les crons ne reçoivent que des messages de tâches qui excluent la publication.
+- Les crons n'ont pas le droit de publier ni de dépenser : c'est une règle de leurs messages et du contrat, pas une barrière technique ; ils tournent avec les mêmes outils que l'agent.
 - Toute publication laisse une trace : manifest, ledger, historique horodaté.
 
 ## Skills tiers

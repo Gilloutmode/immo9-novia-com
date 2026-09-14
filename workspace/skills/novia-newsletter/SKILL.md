@@ -4,7 +4,7 @@ description: "Newsletters segmentées IMMO9 par persona (primo-accédants, inves
 metadata: {"openclaw": {"emoji": "📬", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-newsletter — une idée principale, une persona, un rendu propre dans Gmail et Outlook
+# novia-newsletter : une idée principale, une persona, un rendu propre dans Gmail et Outlook
 
 ## Procédure (cron `newsletter-brouillon` le 1er et le 15, ou à la demande)
 1. Choisir la persona du numéro (rotation P1, P2, P3, P4 selon `learning/CONTENT_LEDGER.md`) et l'idée principale ancrée (veille du mois, échéance, programme).

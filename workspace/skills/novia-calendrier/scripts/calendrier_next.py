@@ -60,7 +60,8 @@ def main():
             continue
         for d in occurrences(ev, start, end):
             rows.append({"date": d.isoformat(), "name": ev["name"], "kind": ev.get("kind"), "city": ev.get("city", ""),
-                         "confirmed": bool(ev.get("confirmed", False)) if (ev.get("kind") == "salon" or ev.get("date")) else True,
+                         "confirmed": bool(ev.get("confirmed", False)),
+                         "indicative": bool(ev.get("indicative", ev.get("recurrence") is not None and not ev.get("confirmed", False))),
                          "source": ev.get("source", ""), "note": ev.get("note", ""), "important": bool(ev.get("important", False)),
                          "sequence": [{"date": (d + timedelta(days=off)).isoformat(), "step": step} for off, step in SEQUENCE] if ev.get("important") else []})
     rows.sort(key=lambda r: r["date"])
@@ -72,7 +73,7 @@ def main():
         return
     print("📅 Du %s au %s" % (start.strftime("%d/%m"), end.strftime("%d/%m/%Y")))
     for r in rows:
-        flag = "" if r["confirmed"] else " · à confirmer"
+        flag = "" if r["confirmed"] else (" · période indicative" if r["indicative"] else " · à confirmer")
         city = (" · " + r["city"]) if r["city"] else ""
         print("- %s · %s (%s%s)%s%s" % (r["date"], r["name"], r["kind"], city, flag, (" · " + r["note"]) if r["note"] else ""))
         if r["sequence"]:

@@ -1,4 +1,4 @@
-# rules/autonomie.md — Ce que Novia Com décide seule, ce qu'elle montre, ce qu'elle ne fait jamais
+# rules/autonomie.md : Ce que Novia Com décide seule, ce qu'elle montre, ce qu'elle ne fait jamais
 
 > Résumé dans `AGENTS.md` §2. Ici le détail, palier par palier, et la correspondance avec la liste de besoins d'IMMO9 (mail du 22/05/2026).
 

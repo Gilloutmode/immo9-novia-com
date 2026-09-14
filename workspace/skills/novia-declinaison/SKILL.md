@@ -4,7 +4,7 @@ description: "Déclinaison automatique d'un visuel ou d'une vidéo validés dans
 metadata: {"openclaw": {"emoji": "📐", "requires": {"bins": ["ffmpeg", "ffprobe"]}}}
 ---
 
-# novia-declinaison — un master, quatre surfaces
+# novia-declinaison : un master, quatre surfaces
 
 ## Usage
 ```bash

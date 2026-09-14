@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
-"""Publie une pièce approuvée via l'adaptateur configuré. Refuse sans approbation go2."""
+"""Publie une pièce approuvée via l'adaptateur configuré.
+
+Préconditions vérifiées ici (et non seulement dans la charte) : onboarding complete, statut approved avec
+enregistrement go2, auteur toujours autorisé, approbation récente, package inchangé depuis la présentation,
+canaux demandés inclus dans ceux approuvés, aucune publication concurrente (verrou), cibles déjà publiées
+non rejouées. Le statut « published » n'est écrit que si chaque cible a un succès terminal.
+"""
 import argparse
 import importlib.util
+import os
+import shutil
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent.parent / "novia-outbox" / "scripts"))
-from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, read_json, append_line, load_contract  # noqa: E402
+from novia_common import find_workspace, load_manifest, write_json, now_iso, add_history, read_json, append_line, load_contract, package_fingerprint, onboarding_status  # noqa: E402
+
+TERMINAL_OK = {"published"}
+PENDING = {"submitted", "processing", "draft_remote"}
 
 
 def load_adapter(name):
@@ -23,18 +34,48 @@ def load_adapter(name):
     return mod
 
 
+def export_media(ws, m, assets):
+    """Copie les seuls médias à publier dans export/<id>/ (le dossier servi publiquement, jamais outbox/)."""
+    dst_dir = ws / "export" / m["id"]
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    out = []
+    for a in assets:
+        rel = Path(a).relative_to(ws / "outbox" / m["id"])
+        dst = dst_dir / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(a, dst)
+        out.append(str(rel))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("piece_id")
-    ap.add_argument("--channel", action="append", default=[], help="canal à publier (défaut : canal primaire)")
-    ap.add_argument("--dry-run", action="store_true", help="simulation, aucun appel externe")
+    ap.add_argument("--channel", action="append", default=[], help="canal à publier (défaut : canaux approuvés)")
+    ap.add_argument("--dry-run", action="store_true", help="simulation complète (adaptateur dryrun), aucun appel externe")
+    ap.add_argument("--preview", action="store_true", help="montre ce qui serait envoyé, sans approbation requise, sans appel externe")
     args = ap.parse_args()
 
     ws = find_workspace()
     contract = load_contract(ws)
     path, m = load_manifest(ws, args.piece_id)
+    channels_cfg = read_json(ws / "state" / "channels.json", {"channels": {}}).get("channels", {})
+    approved_channels = list((m["approvals"].get("go2") or {}).get("channels") or m.get("channels") or [m["channel_primary"]])
+    targets = args.channel or approved_channels
 
-    if m["status"] != "approved" or not m["approvals"].get("go2"):
+    if args.preview:
+        for ch in targets:
+            cfg = channels_cfg.get(ch, {})
+            caption = m["captions"].get(ch) or m["captions"].get("default") or ""
+            assets = [a["file"] for a in m.get("assets", []) if not a.get("channels") or ch in a["channels"]]
+            print("[aperçu] %s via %s : %d fichier(s) %s ; légende %d caractères :\n%s\n" % (ch, cfg.get("adapter") or "(non configuré)", len(assets), assets, len(caption), caption))
+        return
+
+    if onboarding_status(ws) != "complete":
+        sys.exit("REFUS : onboarding en %s ; aucune publication avant complete." % onboarding_status(ws))
+    if m.get("is_test"):
+        sys.exit("REFUS : pièce test de calibration, jamais publiable.")
+    if m["status"] not in ("approved", "submitted") or not m["approvals"].get("go2"):
         sys.exit("REFUS : pièce %s sans « Go publie » enregistré (statut %s)." % (m["id"], m["status"]))
     go2 = m["approvals"]["go2"]
     approvers = read_json(ws / "state" / "approvers.json", {"approvers": []}).get("approvers", [])
@@ -44,46 +85,76 @@ def main():
     at = datetime.fromisoformat(go2["at"])
     if datetime.now(at.tzinfo) - at > ttl:
         sys.exit("REFUS : « Go publie » trop ancien (> %s h) ; re-présenter la pièce." % contract.get("validation", {}).get("approval_ttl_hours", 24))
+    if package_fingerprint(ws, m) != go2.get("package_fingerprint"):
+        sys.exit("REFUS : le package a changé depuis l'approbation ; re-présenter et refaire approuver.")
+    extra = [ch for ch in targets if ch not in approved_channels]
+    if extra:
+        sys.exit("REFUS : canal non approuvé : %s (approuvés : %s)." % (", ".join(extra), ", ".join(approved_channels)))
 
-    channels_cfg = read_json(ws / "state" / "channels.json", {"channels": {}}).get("channels", {})
-    targets = args.channel or [m["channel_primary"]]
-    results = []
-    for ch in targets:
-        cfg = dict(channels_cfg.get(ch, {}))
-        adapter_name = "dryrun" if args.dry_run else cfg.get("adapter")
-        if not adapter_name:
-            sys.exit("REFUS : aucun adaptateur configuré pour le canal « %s » dans state/channels.json." % ch)
-        caption = m["captions"].get(ch) or m["captions"].get("default") or ""
-        assets = [ws / "outbox" / m["id"] / a["file"] for a in m.get("assets", []) if not a.get("channels") or ch in a["channels"]]
-        missing = [str(a) for a in assets if not a.exists()]
-        if missing:
-            sys.exit("REFUS : fichiers manquants : %s" % ", ".join(missing))
-        mod = load_adapter(adapter_name)
-        try:
-            res = mod.publish(channel=ch, settings=cfg, caption=caption, assets=[str(a) for a in assets], manifest=m)
-        except Exception as e:  # l'erreur est rapportée telle quelle, sans repli silencieux
-            add_history(m, "publish_failed", by="agent", note="%s: %s" % (ch, e))
+    lock = ws / "outbox" / m["id"] / ".publish.lock"
+    try:
+        fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, now_iso().encode("utf-8"))
+        os.close(fd)
+    except FileExistsError:
+        sys.exit("REFUS : publication déjà en cours pour %s (verrou %s)." % (m["id"], lock.name))
+    try:
+        done = {r["channel"] for r in m["publication"].get("results", []) if r.get("state") in TERMINAL_OK}
+        results = []
+        for ch in targets:
+            if ch in done and not args.dry_run:
+                print("%s : déjà publié, ignoré" % ch)
+                continue
+            cfg = dict(channels_cfg.get(ch, {}))
+            adapter_name = "dryrun" if args.dry_run else cfg.get("adapter")
+            if not adapter_name:
+                sys.exit("REFUS : aucun adaptateur configuré pour le canal « %s » dans state/channels.json." % ch)
+            caption = m["captions"].get(ch) or m["captions"].get("default") or ""
+            assets = [ws / "outbox" / m["id"] / a["file"] for a in m.get("assets", []) if not a.get("channels") or ch in a["channels"]]
+            missing = [str(a) for a in assets if not a.exists()]
+            if missing:
+                sys.exit("REFUS : fichiers manquants : %s" % ", ".join(missing))
+            if adapter_name == "meta_graph":
+                cfg["exported_files"] = export_media(ws, m, [str(a) for a in assets])
+            mod = load_adapter(adapter_name)
+            try:
+                res = mod.publish(channel=ch, settings=cfg, caption=caption, assets=[str(a) for a in assets], manifest=m)
+            except Exception as e:  # rapporté tel quel, sans repli silencieux
+                add_history(m, "publish_failed", by="agent", note="%s: %s" % (ch, e))
+                write_json(path, m)
+                sys.exit("ÉCHEC publication %s via %s : %s" % (ch, adapter_name, e))
+            res = dict(res or {})
+            state = "simulated" if adapter_name == "dryrun" else (res.get("state") or "submitted")
+            res.update({"channel": ch, "adapter": adapter_name, "at": now_iso(), "state": state})
+            results.append(res)
+            if state != "simulated":
+                m["publication"]["results"].append(res)
+                write_json(path, m)  # chaque succès est sauvegardé immédiatement
+        if not args.dry_run:
+            states = {r["channel"]: r.get("state") for r in m["publication"]["results"]}
+            if all(states.get(ch) in TERMINAL_OK for ch in approved_channels):
+                m["status"] = "published"
+                add_history(m, "published", by=str(go2.get("by")))
+            else:
+                m["status"] = "submitted"
+                add_history(m, "submitted", by=str(go2.get("by")), note=str(states))
             write_json(path, m)
-            sys.exit("ÉCHEC publication %s via %s : %s" % (ch, adapter_name, e))
-        res = dict(res or {})
-        res.update({"channel": ch, "adapter": adapter_name, "at": now_iso()})
-        results.append(res)
-        m["publication"]["results"].append(res)
-
-    if not args.dry_run:
-        m["status"] = "published"
-        add_history(m, "published", by=str(go2.get("by")))
-        write_json(path, m)
+            for r in results:
+                label = {"published": "publiée", "submitted": "soumise (en attente de confirmation)", "processing": "en traitement", "draft_remote": "brouillon créé chez le prestataire"}.get(r["state"], r["state"])
+                append_line(ws / "learning" / "CONTENT_LEDGER.md",
+                            "- %s · %s · %s · %s · %s · %s · %s" % (now_iso()[:10], m["id"], m["format"], m["persona"], r["channel"], label, r.get("url") or r.get("id") or ""))
+                if r["state"] in TERMINAL_OK:
+                    append_line(ws / "learning" / "FEED_STATE.md", "- %s · %s · %s · %s · %s" % (now_iso()[:10], r["channel"], m["format"], m["title"], r.get("url") or ""))
+        else:
+            add_history(m, "publish_dry_run", by="agent")
+            write_json(path, m)
         for r in results:
-            append_line(ws / "learning" / "CONTENT_LEDGER.md",
-                        "- %s · %s · %s · %s · %s · publiée · %s" % (now_iso()[:10], m["id"], m["format"], m["persona"], r["channel"], r.get("url") or r.get("id") or ""))
-            append_line(ws / "learning" / "FEED_STATE.md",
-                        "- %s · %s · %s · %s · %s" % (now_iso()[:10], r["channel"], m["format"], m["title"], r.get("url") or ""))
-    else:
-        add_history(m, "publish_dry_run", by="agent")
-        write_json(path, m)
-    for r in results:
-        print("%s via %s : %s" % (r["channel"], r["adapter"], r.get("url") or r.get("id") or r.get("message", "ok")))
+            print("%s via %s [%s] : %s" % (r["channel"], r["adapter"], r["state"], r.get("url") or r.get("id") or r.get("message", "ok")))
+    finally:
+        try:
+            lock.unlink()
+        except FileNotFoundError:
+            pass
 
 
 if __name__ == "__main__":

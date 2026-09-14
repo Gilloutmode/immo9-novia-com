@@ -1,4 +1,4 @@
-# NARRATIVE_QUALITY.md — Ce qui fait qu'un texte IMMO9 mérite d'être présenté
+# NARRATIVE_QUALITY.md : Ce qui fait qu'un texte IMMO9 mérite d'être présenté
 
 > Contrôle interne, silencieux, avant toute présentation. Un texte qui échoue n'est pas présenté : je corrige ou j'abandonne. La scorecard est notée dans le manifest de la pièce.
 

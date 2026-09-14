@@ -4,7 +4,7 @@ description: "Carrousel pédagogique IMMO9 pour LinkedIn (PDF) et Instagram (ima
 metadata: {"openclaw": {"emoji": "🎞️", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-carousel — cinq à huit slides qui font garder un repère
+# novia-carousel : cinq à huit slides qui font garder un repère
 
 ## Procédure
 1. Sujet ancré (veille, question client, calendrier) et persona unique. Vérifier `learning/THEMES_COVERED.md`.

@@ -38,6 +38,8 @@ def publish(channel, settings, caption, assets, manifest):
     body = {"author": owner, "commentary": caption, "visibility": "PUBLIC",
             "distribution": {"feedDistribution": "MAIN_FEED", "targetEntities": [], "thirdPartyDistributionChannels": []},
             "lifecycleState": "PUBLISHED", "isReshareDisabledByAuthor": False}
+    if any(a.lower().endswith(".pdf") for a in assets):
+        raise RuntimeError("l'adaptateur linkedin natif ne gère pas les documents PDF ; utiliser upload_post (upload_document) ou publier le PDF manuellement")
     images = [a for a in assets if a.lower().endswith((".png", ".jpg", ".jpeg"))]
     if images:
         image_urn = _upload_image(token, owner, images[0])
@@ -46,4 +48,4 @@ def publish(channel, settings, caption, assets, manifest):
                                  headers=dict(_headers(token), **{"Content-Type": "application/json"}))
     with urllib.request.urlopen(req, timeout=60) as resp:
         post_id = resp.headers.get("x-restli-id") or resp.headers.get("X-RestLi-Id")
-    return {"id": post_id, "url": ("https://www.linkedin.com/feed/update/%s" % post_id) if post_id else None}
+    return {"state": "published" if post_id else "submitted", "id": post_id, "url": ("https://www.linkedin.com/feed/update/%s" % post_id) if post_id else None}

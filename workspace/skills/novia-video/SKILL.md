@@ -4,7 +4,7 @@ description: "Vidéo IMMO9 : vidéos courtes ex nihilo à partir d'infographies 
 metadata: {"openclaw": {"emoji": "🎬", "requires": {"bins": ["ffmpeg"]}}}
 ---
 
-# novia-video — palier 2, prêt dès que les skills partagés sont installés
+# novia-video : palier 2, prêt dès que les skills partagés sont installés
 
 ## Vidéo courte ex nihilo (F4)
 1. Script parlé de 30 à 60 secondes (`novia-editorial`), une question, une réponse, un repère. Sources dans la description.

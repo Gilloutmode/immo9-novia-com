@@ -4,7 +4,7 @@ description: "Rédaction éditoriale IMMO9 : posts réseaux sociaux quotidiens (
 metadata: {"openclaw": {"emoji": "✍️", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-editorial — écrire dans la voix d'IMMO9, pour une personne précise
+# novia-editorial : écrire dans la voix d'IMMO9, pour une personne précise
 
 ## Avant d'écrire (obligatoire)
 1. `doctrine/LINES.md` puis `rules/conformite-immobilier.md` : ce qui bloque.

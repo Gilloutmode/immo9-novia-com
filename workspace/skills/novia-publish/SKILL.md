@@ -4,16 +4,17 @@ description: "Publication d'une pièce IMMO9 approuvée (« Go publie » enregis
 metadata: {"openclaw": {"emoji": "🚀", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-publish — publier, seulement après « Go publie »
+# novia-publish : publier, seulement après « Go publie »
 
-## Ce que fait `scripts/publish.py <id> [--channel linkedin] [--dry-run]`
-1. Charge `outbox/<id>/manifest.json` et vérifie : statut `approved`, enregistrement `approvals.go2` présent, auteur dans `state/approvers.json`, approbation de moins de 24 heures.
+## Ce que fait `scripts/publish.py <id> [--channel linkedin] [--dry-run] [--preview]`
+1. Charge `outbox/<id>/manifest.json` et vérifie : onboarding `complete`, pièce non test, statut `approved`, enregistrement `approvals.go2` présent, auteur dans `state/approvers.json`, approbation de moins de 24 heures, empreinte du package identique à celle approuvée, canaux demandés inclus dans les canaux approuvés, aucune publication déjà en cours (verrou par pièce). Les cibles déjà publiées ne sont pas rejouées en cas de reprise.
 2. Charge `state/channels.json` : pour chaque canal, le nom de l'adaptateur et ses réglages (identifiants de compte, URL de base publique). Les secrets viennent des variables d'environnement déclarées dans `skills.entries.novia-publish.env` de la configuration OpenClaw, jamais d'un fichier du workspace.
 3. Appelle l'adaptateur (`adapters/<nom>.py`) avec la légende du canal (`manifest.captions[canal]`) et les fichiers (`manifest.assets` filtrés par canal).
-4. Écrit le résultat (identifiant, URL, horodatage) dans le manifest, passe le statut à `published`, ajoute une ligne à `learning/CONTENT_LEDGER.md` et met à jour `learning/FEED_STATE.md`.
-5. En cas d'échec : le manifest garde `approved`, l'erreur est écrite dans `history`, l'agent la rapporte telle quelle.
+4. Écrit chaque résultat (état, identifiant, URL, horodatage) dans le manifest dès qu'il est obtenu. États possibles : `published` (succès terminal), `submitted` (accepté, confirmation à suivre), `processing`, `draft_remote` (brouillon créé chez le prestataire, envoi manuel), `simulated`. Le statut de la pièce passe à `published` seulement si toutes les cibles approuvées sont `published` ; sinon `submitted`, et l'agent le dit avec ces mots dans le groupe. Ledger et `FEED_STATE.md` mis à jour.
+5. En cas d'échec : le manifest garde son statut, l'erreur est écrite dans `history`, l'agent la rapporte telle quelle. Une reprise ne republie pas les cibles déjà réussies.
 
-`--dry-run` force l'adaptateur `dryrun` (aucun appel externe) et affiche ce qui serait envoyé. C'est le mode utilisé pendant l'onboarding et par `scripts/acceptance.sh`.
+`--preview` montre ce qui serait envoyé (adaptateur, fichiers, légende) sans approbation et sans appel externe. `--dry-run` passe par l'adaptateur `dryrun` après toutes les vérifications ; ses résultats sont `simulated` et ne comptent jamais comme une publication.
+Pour l'adaptateur Meta, les médias à publier sont copiés dans `export/<id>/`, seul dossier à exposer publiquement (jamais `outbox/`).
 
 ## Adaptateurs livrés
 - `dryrun` : simulation complète, toujours disponible.

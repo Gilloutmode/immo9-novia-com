@@ -1,37 +1,37 @@
 ---
 name: html-email
-description: Génération d'emails HTML professionnels — mise en forme optimale, lisibilité maximale, rendu Gmail parfait.
+description: Génération d'emails HTML professionnels : mise en forme optimale, lisibilité maximale, rendu Gmail parfait.
 ---
 
 # SKILL: html-email
-> Génération d'emails HTML professionnels — mise en forme optimale, lisibilité maximale, rendu Gmail parfait.
+> Génération d'emails HTML professionnels : mise en forme optimale, lisibilité maximale, rendu Gmail parfait.
 
 ## Quand utiliser ce skill
 - Dès que l'utilisateur demande de préparer un email important (business, proposition, dossier, pitch)
 - Dès que le contenu est dense (plusieurs sections, chiffres, listes, liens)
-- Dès qu'on envoie via `gog gmail send --body-html`
+- Dès qu'un email HTML doit être produit (newsletter, mail à un partenaire) ; l'envoi passe par l'outil d'emailing d'IMMO9 après « Go publie »
 
 ---
 
 ## Règles d'or (à respecter ABSOLUMENT)
 
 ### 1. Structure HTML
-- **TOUJOURS** utiliser des `<table>` pour le layout principal (pas des `<div>` — Gmail les casse)
+- **TOUJOURS** utiliser des `<table>` pour le layout principal (pas des `<div>` : Gmail les casse)
 - **TOUJOURS** inline les styles CSS critiques (Gmail ignore les `<style>` dans le `<head>` sur mobile)
-- **Largeur max : 620px** — au-delà ça déborde sur mobile et dans les preview panes
-- **Un seul fond blanc** — pas de background coloré sur le body, juste sur le wrapper
+- **Largeur max : 620px** : au-delà ça déborde sur mobile et dans les preview panes
+- **Un seul fond blanc** : pas de background coloré sur le body, juste sur le wrapper
 
 ### 2. Typographie
-- **Body text : 16px, line-height 1.8** — jamais en dessous de 16px, jamais moins de 1.7 d'interligne
+- **Body text : 16px, line-height 1.8** : jamais en dessous de 16px, jamais moins de 1.7 d'interligne
 - **H2 : 18px bold** avec border-left colorée (3-4px) pour la hiérarchie visuelle
-- **H3 : 15-16px bold** — sous-sections
-- **Police : Arial, Helvetica, sans-serif** — les seules qui rendent bien partout
-- **Couleur body text : #334155** — pas noir pur (#000), trop agressif
-- **Couleur titres : #0f172a** — foncé mais pas noir
+- **H3 : 15-16px bold** : sous-sections
+- **Police : Arial, Helvetica, sans-serif** : les seules qui rendent bien partout
+- **Couleur body text : #334155** : pas noir pur (#000), trop agressif
+- **Couleur titres : #0f172a** : foncé mais pas noir
 
-### 3. Espacement — LA CLÉ DE LA LISIBILITÉ
-- **Padding sections : 32px 40px minimum** — l'email doit respirer
-- **Margin entre paragraphes : 16-20px** — jamais coller deux blocs
+### 3. Espacement : LA CLÉ DE LA LISIBILITÉ
+- **Padding sections : 32px 40px minimum** : l'email doit respirer
+- **Margin entre paragraphes : 16-20px** : jamais coller deux blocs
 - **Séparateur visuel entre sections** : `<hr>` style léger OU border-top sur le div suivant
 - **Chaque section majeure = son propre bloc** avec padding interne
 
@@ -40,7 +40,7 @@ description: Génération d'emails HTML professionnels — mise en forme optimal
 - **Statistiques** : cellules côte à côte (table 3-4 colonnes), fond #f8fafc, chiffre en grand (24px bold #6366f1)
 - **Listes** : `<ul>` avec `li { margin-bottom: 10px; font-size: 16px; }`
 - **Liens sources** : 13px, couleur #6366f1, sur ligne séparée avec 🔗 emoji
-- **Ne jamais faire de tableaux Markdown** — toujours des `<table>` HTML avec style inline
+- **Ne jamais faire de tableaux Markdown** : toujours des `<table>` HTML avec style inline
 
 ### 5. Ce qui tue la lisibilité (à bannir)
 - ❌ Texte trop dense sans espaces entre blocs
@@ -49,10 +49,10 @@ description: Génération d'emails HTML professionnels — mise en forme optimal
 - ❌ Paragraphes > 5 lignes sans break
 - ❌ Plus de 3 couleurs différentes
 - ❌ Background coloré derrière le texte body (sauf callouts ponctuels)
-- ❌ Inline `style=""` trop complexes sur les `<a>` — Gmail les strip parfois
+- ❌ Inline `style=""` trop complexes sur les `<a>` : Gmail les strip parfois
 
 ### 6. Longueur et densité
-- **Pas de condensation** : si le contenu est long, il reste long — mais aéré
+- **Pas de condensation** : si le contenu est long, il reste long : mais aéré
 - **Chaque section = respiration** : titre → contenu → espace → section suivante
 - **Maximum 600 mots par section** avant d'ajouter un séparateur
 
@@ -108,13 +108,13 @@ description: Génération d'emails HTML professionnels — mise en forme optimal
 
         <h2>[Section 2]</h2>
         <ul>
-          <li><strong>Point 1</strong> — explication</li>
-          <li><strong>Point 2</strong> — explication</li>
+          <li><strong>Point 1</strong> : explication</li>
+          <li><strong>Point 2</strong> : explication</li>
         </ul>
 
         <div class="sources">
-          <a href="#">🔗 Source 1 — description</a>
-          <a href="#">🔗 Source 2 — description</a>
+          <a href="#">🔗 Source 1 : description</a>
+          <a href="#">🔗 Source 2 : description</a>
         </div>
 
         <!-- CLOSING -->
@@ -176,28 +176,6 @@ description: Génération d'emails HTML professionnels — mise en forme optimal
 
 ---
 
-## Workflow d'envoi (via gog)
-
-```bash
-# 1. Générer le fichier
-cat > /tmp/email-draft.html << 'EOF'
-[HTML complet]
-EOF
-
-# 2. Envoyer à l'utilisateur pour validation
-gog gmail send \
-  --to "gil.benittah@streem.vc" \
-  --subject "[SUJET] [DRAFT - À VALIDER]" \
-  --body-html "$(cat /tmp/email-draft.html)" \
-  --account "gil.benittah@streem.vc" \
-  --force
-
-# 3. Après validation l'utilisateur → envoyer au destinataire final
-# JAMAIS envoyer directement sans validation de l'utilisateur
-```
-
----
-
 ## Checklist avant envoi
 
 - [ ] Largeur max 620px respectée
@@ -212,6 +190,6 @@ gog gmail send \
 
 ---
 
-## Adresses email connues
-- **l'utilisateur (validation)** : `gil.benittah@streem.vc` — TOUJOURS lui envoyer en premier
-- **Denis Gihan** : à confirmer avant envoi
+
+## Circuit Novia Com
+Toute newsletter ou email produit avec ces règles est une pièce de l'outbox : présentation en carte, « Go publie » d'une personne autorisée, envoi par l'adaptateur configuré (Brevo) ou manuellement par l'équipe. Aucune adresse personnelle, aucun envoi direct depuis ce skill.

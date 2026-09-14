@@ -5,7 +5,9 @@ Prérequis (voir connectors/README.md) :
   jeton de rafraîchissement obtenu une fois pour la chaîne IMMO9 ;
 - variables YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_REFRESH_TOKEN ;
 - réglages state/channels.json : {"adapter": "youtube", "privacy": "private|unlisted|public", "category_id": "22"}.
-Quota : un dépôt coûte 1 600 unités sur les 10 000 quotidiennes par défaut.
+Quota : YouTube applique un quota quotidien (10 000 unités par défaut) et, selon la documentation en vigueur, un
+compartiment distinct pour les dépôts de vidéos ; vérifier https://developers.google.com/youtube/v3/docs/videos/insert
+à l'installation, les règles changent.
 """
 import json
 import sys
@@ -45,4 +47,4 @@ def publish(channel, settings, caption, assets, manifest):
         with urllib.request.urlopen(req, timeout=1800) as resp:
             res = json.loads(resp.read().decode("utf-8"))
     vid = res.get("id")
-    return {"id": vid, "url": ("https://www.youtube.com/watch?v=%s" % vid) if vid else None, "raw": {"privacy": meta["status"]["privacyStatus"]}}
+    return {"state": "published" if vid else "submitted", "id": vid, "url": ("https://www.youtube.com/watch?v=%s" % vid) if vid else None, "raw": {"privacy": meta["status"]["privacyStatus"]}}

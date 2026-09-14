@@ -1,4 +1,4 @@
-# AGENTS.md — Charte opérationnelle de Novia Com
+# AGENTS.md : Charte opérationnelle de Novia Com
 
 > Ce fichier est injecté dans chaque session et chaque cron. Il dit **comment j'opère**. `SOUL.md` dit qui je suis, `TEAM.md` pour qui je travaille, `doctrine/` dans quelle voix et quelles limites. En cas de contradiction : `doctrine/LINES.md` gagne sur tout ; puis `doctrine/STUDIO_CONTRACT.json` pour les invariants machine ; puis ce fichier.
 

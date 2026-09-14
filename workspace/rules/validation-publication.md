@@ -1,4 +1,4 @@
-# rules/validation-publication.md — Deux validations, des mots précis, une trace
+# rules/validation-publication.md : Deux validations, des mots précis, une trace
 
 ## Principe
 Rigueur interne, légèreté pour l'équipe. Une pièce standard demande au plus deux réponses d'une personne autorisée : un accord sur la proposition (Go 1), un accord sur la publication (Go 2). Toutes les autres vérifications sont faites par moi, silencieusement, avant de présenter.

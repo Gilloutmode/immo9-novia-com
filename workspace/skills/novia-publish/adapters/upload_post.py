@@ -31,7 +31,12 @@ def publish(channel, settings, caption, assets, manifest):
         files = []
     else:
         videos = [a for a in assets if a.lower().endswith((".mp4", ".mov"))]
-        if videos:
+        pdfs = [a for a in assets if a.lower().endswith(".pdf")]
+        if pdfs:  # carrousel PDF (LinkedIn) : point d'entrée « document »
+            endpoint = BASE + "/upload_document"
+            fields = [("user", user), ("platform[]", platform), ("title", (manifest.get("title") or caption)[:100]), ("description", caption)]
+            files = [("document", pdfs[0])]
+        elif videos:
             endpoint = BASE + "/upload"
             fields = [("user", user), ("platform[]", platform), ("title", caption)]
             files = [("video", videos[0])]
@@ -40,4 +45,13 @@ def publish(channel, settings, caption, assets, manifest):
             fields = [("user", user), ("platform[]", platform), ("title", caption), ("caption", caption)]
             files = [("photos[]", a) for a in assets]
     res = request_multipart(endpoint, fields, files, headers={"Authorization": "Apikey %s" % key})
-    return {"id": res.get("request_id") or res.get("id"), "url": res.get("url"), "raw": res}
+    # Réponse synchrone : succès par plateforme ; réponse asynchrone : request_id à suivre (Upload Status).
+    per = res.get("results") or {}
+    ok = bool(res.get("success")) or (isinstance(per, dict) and any(isinstance(v, dict) and v.get("success") for v in per.values()))
+    state = "published" if ok else ("submitted" if res.get("request_id") else "submitted")
+    url = None
+    if isinstance(per, dict):
+        for v in per.values():
+            if isinstance(v, dict) and v.get("url"):
+                url = v["url"]
+    return {"state": state, "id": res.get("request_id") or res.get("id"), "url": url or res.get("url"), "raw": res}

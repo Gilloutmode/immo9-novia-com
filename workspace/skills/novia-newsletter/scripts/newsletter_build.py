@@ -46,7 +46,7 @@ def main():
              "<body style=\"margin:0;padding:0;background:%s;\">" % t["color_secondary"],
              "<div style=\"display:none;max-height:0;overflow:hidden;\">%s</div>" % esc(spec.get("preheader", "")),
              "<table role=\"presentation\" width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:%s;\"><tr><td align=\"center\" style=\"padding:24px 12px;\">" % t["color_secondary"],
-             "<table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:640px;width:100%%;background:#ffffff;\">",
+             "<table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:640px;width:100%;background:#ffffff;\">",
              "<tr><td style=\"background:%s;padding:22px 32px;font-family:%s;font-size:24px;font-weight:bold;color:#ffffff;\">%s</td></tr>" % (t["color_primary"], t["font_title"], esc(spec.get("header") or t["brand_name"])),
              "<tr><td style=\"padding:28px 32px 8px 32px;\">"]
     parts.append("<h1 style=\"font-family:%s;font-size:28px;line-height:1.25;color:%s;margin:0 0 18px 0;\">%s</h1>" % (t["font_title"], t["color_primary"], esc(spec.get("title") or subject)))

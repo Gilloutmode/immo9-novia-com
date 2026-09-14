@@ -1,4 +1,4 @@
-# rules/recherche-veille.md — Sources, fraîcheur, citation
+# rules/recherche-veille.md : Sources, fraîcheur, citation
 
 ## Sources
 - Les sources autorisées sont dans `knowledge/sources-veille.json`, avec un niveau de confiance (officiel, professionnel, presse, social). Une information issue d'une source « social » ou « presse » sur un sujet réglementaire est vérifiée sur une source « officiel » avant d'être reprise dans un contenu.

@@ -41,7 +41,9 @@ def render_slide(i, total, s, tokens, w, h, footer):
     kicker = s.get("kicker") or footer.get("kicker") or ""
     brand = footer.get("brand") or tokens["brand_name"]
     logo = tokens.get("logo_path")
-    brand_html = "<img src=\"%s\" alt=\"%s\">" % (html.escape(logo), html.escape(brand)) if logo else html.escape(brand)
+    if logo and not str(logo).startswith(("http://", "https://", "file://", "data:")):
+        logo = (tokens["_ws"] / logo).resolve().as_uri() if not Path(logo).is_absolute() else Path(logo).as_uri()
+    brand_html = "<img src=\"%s\" alt=\"%s\">" % (html.escape(str(logo)), html.escape(brand)) if logo else html.escape(brand)
     parts = ["<section class=\"%s\">" % cls]
     if kicker:
         parts.append("<div class=\"kicker\">%s</div>" % html.escape(kicker))
@@ -67,6 +69,7 @@ def main():
     spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
     tokens = dict(DEFAULT_TOKENS)
     tokens.update({k: v for k, v in (read_json(ws / "templates" / "_tokens.json", {}) or {}).items() if v})
+    tokens["_ws"] = ws
     slides = spec.get("slides", [])
     if not 5 <= len(slides) <= 8:
         sys.exit("un carrousel a entre 5 et 8 slides (ici %d)" % len(slides))
@@ -80,6 +83,10 @@ def main():
     out_dir = Path(args.spec).resolve().parent
     slides_dir = out_dir / "slides"
     slides_dir.mkdir(exist_ok=True)
+    for old in slides_dir.glob("slide-*.html"):  # anciennes slides d'une construction précédente
+        old.unlink()
+    for old in slides_dir.glob("slide-*.png"):
+        old.unlink()
     head = "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>%s</title><style>%s</style></head><body>" % (html.escape(spec.get("id", "carrousel")), css)
     all_html = [head]
     for i, s in enumerate(slides, 1):

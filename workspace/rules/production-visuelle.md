@@ -1,4 +1,4 @@
-# rules/production-visuelle.md — Visuels à la charte, lisibles, honnêtes
+# rules/production-visuelle.md : Visuels à la charte, lisibles, honnêtes
 
 ## Avant de produire
 1. Lire `doctrine/BRAND_SYSTEM.md` : couleurs, typographies, logo, zones de sécurité par format, ce qui est interdit.

@@ -1,4 +1,4 @@
-# rules/crons.md — Contrat des tâches planifiées
+# rules/crons.md : Contrat des tâches planifiées
 
 ## Règles communes
 1. Première action : lire `state/onboarding.json`. Si `status` n'est pas `complete`, répondre `NO_REPLY`.
@@ -7,7 +7,7 @@
 4. Écrire son état (`state/`, `learning/`) pour ne pas se répéter.
 5. En cas d'erreur d'outil : une ligne dans `memory/<date>.md`, et le signaler dans la prochaine sortie si l'erreur persiste deux fois.
 
-## Les crons livrés (déclarés dans `crons/crons.json`, installés par `scripts/install-crons.sh`)
+## Les crons livrés (déclarés dans `crons/crons.json`, installés par `crons/install-crons.sh`)
 Palier 1, activés après l'onboarding :
 - `veille-matin` : du lundi au vendredi à 7h30, digest de veille (marché, réglementaire, presse, concurrents).
 - `proposition-du-jour` : du lundi au vendredi à 9h00, au plus deux propositions de posts ancrées dans la veille ou le calendrier, présentées en cartes.

@@ -1,9 +1,9 @@
 ---
 name: sound-integration
-description: Intégrer des effets sonores dans des vidéos comme un pro — timing, layering, mixing, impact émotionnel.
+description: Intégrer des effets sonores dans des vidéos comme un pro : timing, layering, mixing, impact émotionnel.
 ---
 
-# 🎬 Sound Design Integration — Expert Video Editing Skill
+# 🎬 Sound Design Integration : Expert Video Editing Skill
 
 > Intégrer des effets sonores dans tes vidéos comme un pro : timing, layering, mixing, impact émotionnel
 
@@ -22,7 +22,7 @@ Le son représente **50% de l'impact** d'une vidéo. Une scène parfaitement fil
 
 ---
 
-## ⏱️ TIMING — La Précision au Frame
+## ⏱️ TIMING : La Précision au Frame
 
 ### Règle d'Or
 > Un son décalé d'**UN SEUL FRAME** peut ruiner l'illusion.
@@ -50,7 +50,7 @@ Le son représente **50% de l'impact** d'une vidéo. Une scène parfaitement fil
 
 ---
 
-## 📚 LAYERING — Construire la Profondeur
+## 📚 LAYERING : Construire la Profondeur
 
 ### Principe
 > Ne jamais se reposer sur UN SEUL son. Layerer = réalisme + impact.
@@ -104,7 +104,7 @@ Chaque layer doit occuper sa propre "zone" de fréquences :
 
 ---
 
-## 🎚️ NIVEAUX AUDIO — Le Mix Parfait
+## 🎚️ NIVEAUX AUDIO : Le Mix Parfait
 
 ### Références de Niveaux (en dB)
 
@@ -139,7 +139,7 @@ Quand la voix parle, **baisser automatiquement** la musique/SFX :
 
 ---
 
-## 💫 IMPACT ÉMOTIONNEL — Le Son Raconte
+## 💫 IMPACT ÉMOTIONNEL : Le Son Raconte
 
 ### Comment le Son Crée l'Émotion
 
@@ -176,7 +176,7 @@ Quand la voix parle, **baisser automatiquement** la musique/SFX :
 
 ---
 
-## 📱 WORKFLOW CAPCUT — Guide Pratique
+## 📱 WORKFLOW CAPCUT : Guide Pratique
 
 ### Setup Initial
 1. **Importer** vidéo + tous les assets audio
@@ -298,12 +298,12 @@ Outro  : Résolution musicale
 
 ## 🎓 RÈGLES D'OR
 
-1. **Dialogue > Tout** — Si on n'entend pas la voix, c'est raté
-2. **Sync = Crédibilité** — 1 frame de décalage = amateur
-3. **Layer ≠ Surcharger** — 3-4 layers max par moment
-4. **Le silence EST un son** — L'utiliser pour créer du contraste
-5. **Tester sur mobile** — 90% de ton audience écoute sur téléphone
-6. **Moins = Plus** — Un mix clean bat un mix chargé
+1. **Dialogue > Tout** : Si on n'entend pas la voix, c'est raté
+2. **Sync = Crédibilité** : 1 frame de décalage = amateur
+3. **Layer ≠ Surcharger** : 3-4 layers max par moment
+4. **Le silence EST un son** : L'utiliser pour créer du contraste
+5. **Tester sur mobile** : 90% de ton audience écoute sur téléphone
+6. **Moins = Plus** : Un mix clean bat un mix chargé
 
 ---
 
@@ -315,5 +315,5 @@ Outro  : Résolution musicale
 
 ---
 
-*Skill créée pour David Benittah — Février 2026*
+*Skill créée pour David Benittah : Février 2026*
 *À utiliser avec : `skills/elevenlabs-soundfx/SKILL.md` pour la génération*

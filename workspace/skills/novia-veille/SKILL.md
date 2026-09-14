@@ -4,7 +4,7 @@ description: "Veille IMMO9 : marché du neuf, réglementaire et fiscal, presse n
 metadata: {"openclaw": {"emoji": "🔎", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-veille — lire ce qui compte, ne rien répéter, tout sourcer
+# novia-veille : lire ce qui compte, ne rien répéter, tout sourcer
 
 ## Digest du matin (cron `veille-matin`, lundi à vendredi)
 1. `python3 skills/novia-veille/scripts/veille_rss.py --days 2` : lit les sources RSS de `knowledge/sources-veille.json`, filtre avec `knowledge/veille-keywords.json`, écarte ce qui a déjà été vu (`state/veille-seen.json`), imprime les nouveautés groupées par thème et les ajoute à `learning/VEILLE.md`.

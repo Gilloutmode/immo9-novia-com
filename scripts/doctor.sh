@@ -17,7 +17,7 @@ $OPENCLAW --version >/dev/null 2>&1 && pass "OpenClaw $($OPENCLAW --version 2>/d
 echo "== Workspace"
 for f in AGENTS.md SOUL.md IDENTITY.md TEAM.md HEARTBEAT.md BOOT.md doctrine/STUDIO_CONTRACT.json doctrine/LINES.md doctrine/VOICE.md; do [ -f "$WS/$f" ] && pass "$f" || fail "$f absent"; done
 for f in state/onboarding.json state/approvers.json state/channels.json templates/_tokens.json knowledge/sources-veille.json knowledge/calendrier-marronniers.json; do
-  if [ -f "$WS/$f" ]; then python3 -c "import json;json.load(open('$WS/$f'))" 2>/dev/null && pass "$f valide" || fail "$f : JSON invalide"; else fail "$f absent (copier depuis l'exemple)"; fi
+  if [ -f "$WS/$f" ]; then python3 -c "import json;json.load(open('$WS/$f'))" 2>/dev/null && pass "$f valide" || fail "$f : JSON invalide"; else fail "$f absent (scripts/install.sh le crée depuis l'exemple)"; fi
 done
 grep -q '"status": "complete"' "$WS/state/onboarding.json" 2>/dev/null && pass "onboarding : complete" || note "onboarding : $(python3 -c "import json;print(json.load(open('$WS/state/onboarding.json'))['status'])" 2>/dev/null) (production verrouillée jusqu'à complete)"
 grep -q '\[À REMPLIR\]' "$WS/TEAM.md" && note "TEAM.md contient encore des [À REMPLIR]" || pass "TEAM.md renseigné"

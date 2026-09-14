@@ -1,4 +1,4 @@
-# BOOT.md — Checklist de démarrage du gateway
+# BOOT.md : Checklist de démarrage du gateway
 
 À chaque démarrage du gateway (hook interne `boot-md`) :
 

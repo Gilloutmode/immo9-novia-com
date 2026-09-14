@@ -2,7 +2,7 @@
 """Transcribe a video with ElevenLabs Scribe (word-level, verbatim).
 
 Extracts mono 16k audio, uploads to Scribe, writes word-level JSON next to the
-video (<stem>.words.json) — precise per-word timings for caption sync.
+video (<stem>.words.json) : precise per-word timings for caption sync.
 
   ELEVENLABS_API_KEY=... python3 transcribe.py <video> [--language fr] [--model scribe_v1] [--out words.json]
 

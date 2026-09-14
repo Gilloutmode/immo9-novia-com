@@ -1,5 +1,5 @@
 /**
- * supermonteur — build an animated-caption HyperFrames composition from a cam video + Scribe words.
+ * supermonteur : build an animated-caption HyperFrames composition from a cam video + Scribe words.
  * Full-screen cam + word-by-word captions with the spoken word highlighted. Clean, readable,
  * social-safe, ready to post.
  *
@@ -21,7 +21,7 @@ const accent = args.accent || "#28e0a8";          // active-word colour (change 
 if (!cam || !wordsPath) { console.error("usage: --cam <mp4> --words <json> [--out] [--accent]"); process.exit(1); }
 if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(accent)) { console.error(`--accent invalide: ${accent} (attendu #rgb ou #rrggbb)`); process.exit(1); }
 
-// Escape for HTML text + attributes — keep UTF-8 accents/emoji intact, only neutralise markup chars.
+// Escape for HTML text + attributes : keep UTF-8 accents/emoji intact, only neutralise markup chars.
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // Probe duration without a shell (path may contain spaces/quotes → avoids breakage + shell injection).
@@ -37,7 +37,7 @@ const W = raw.map(w => ({ t: +w.start, e: +w.end, text: String(w.text ?? "").tri
              .filter(w => w.text && Number.isFinite(w.t) && Number.isFinite(w.e) && w.e > w.t)
              .sort((a, b) => a.t - b.t);
 for (let i = 0; i < W.length - 1; i++) W[i].e = Math.min(W[i].e, W[i + 1].t);
-if (W.length === 0) { console.error(`Aucun mot exploitable dans ${wordsPath} — transcription vide ?`); process.exit(1); }
+if (W.length === 0) { console.error(`Aucun mot exploitable dans ${wordsPath} : transcription vide ?`); process.exit(1); }
 
 // Visual width estimate: uppercase + wide glyphs (MW@#%) + emoji cost more than 1 char → truer line breaks.
 const vis = s => [...s.toUpperCase()].reduce((n, ch) => n + (/\p{Emoji}/u.test(ch) ? 2 : /[MW@#%]/.test(ch) ? 1.6 : 1), 0);
@@ -56,7 +56,7 @@ for (let i = 0; i < W.length; i++) {
 }
 
 // caption DOM + timeline ops
-const FRAME = 1 / 25;                               // render fps — keep every animation duration >= 1 frame
+const FRAME = 1 / 25;                               // render fps : keep every animation duration >= 1 frame
 let blocksHtml = "", ops = "";
 lines.forEach((line, li) => {
   const start = line[0].t, end = Math.min(line[line.length - 1].e + 0.4, (lines[li + 1]?.[0].t ?? dur));
@@ -77,7 +77,7 @@ lines.forEach((line, li) => {
 });
 
 // Copy vendored GSAP next to the output so the render is offline + deterministic. Loaded via
-// <script src> rather than inlined — inlining would expose GSAP's internal Math.random() to the linter.
+// <script src> rather than inlined : inlining would expose GSAP's internal Math.random() to the linter.
 const GSAP_FILE = "gsap-3.14.2.min.js";
 copyFileSync(join(dirname(fileURLToPath(import.meta.url)), "vendor", GSAP_FILE), join(dirname(out) || ".", GSAP_FILE));
 const camSrc = esc(cam);

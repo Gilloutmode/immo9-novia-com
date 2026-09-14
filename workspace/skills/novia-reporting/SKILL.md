@@ -4,7 +4,7 @@ description: "Reporting IMMO9 : ingestion des métriques par pièce et par plate
 metadata: {"openclaw": {"emoji": "📈", "requires": {"bins": ["python3"]}}}
 ---
 
-# novia-reporting — mesurer honnêtement, conclure lentement
+# novia-reporting : mesurer honnêtement, conclure lentement
 
 ## Sources de métriques
 - Exports CSV des plateformes (Meta Business Suite, LinkedIn Pages, YouTube Studio) déposés par l'équipe dans `outbox/_metrics/` : colonnes `date, piece_id, channel, metric, value, source`.

@@ -6,9 +6,7 @@ Les dossiers de ce répertoire sont installés pour tous les agents par `scripts
 | Skill | Usage pour Novia Com | Dépendances |
 |---|---|---|
 | `html-email` | règles de mise en forme d'un email HTML lisible partout (utilisées par novia-newsletter) | aucune |
-| `marketing-intelligence` | repères de création de contenu social (synthèse de recherches) | aucune |
-| `social-media-growth-2026` | stratégie de croissance TikTok et Instagram, orientée immobilier | aucune |
-| `elevenlabs-soundfx` | effets sonores pour les vidéos et audiograms | compte ElevenLabs (`ELEVENLABS_API_KEY`) |
+| `elevenlabs-soundfx` | effets sonores pour les vidéos et audiograms | compte ElevenLabs (`ELEVENLABS_API_KEY`) ; l'usage commercial des sons générés dépend du plan souscrit (vérifier la licence ElevenLabs) |
 | `sound-integration` | intégration sonore (timing, mixage) | ffmpeg |
 | `reddit-search` | recherche Reddit par l'API publique | `npm ci` dans le dossier du skill (node) |
 | `nano-banana-pro` | génération et retouche d'images via Gemini (alternative à l'outil image d'OpenClaw) | `uv`, `GEMINI_API_KEY` |
@@ -28,6 +26,7 @@ openclaw skills search video ; openclaw skills search content-marketing ; opencl
 Avant d'installer un skill tiers : `openclaw skills verify @owner/slug`, lecture du `SKILL.md` et des scripts, puis test sur une pièce. Un skill non relu n'entre pas en production (docs/SECURITE.md).
 
 ## Non retenus (et pourquoi)
+- `marketing-intelligence`, `social-media-growth-2026` : conseils de croissance généralistes (objectifs d'abonnés, publication à haute fréquence, chiffres non sourcés) contraires à la doctrine de Novia Com ; à réécrire pour IMMO9 avant tout usage.
 - `deep-search` (recherche multi-moteurs) : puissant mais lié à une machine précise et à une dizaine de clés payantes ; proposé en option au palier 2 (docs/ROADMAP.md).
 - `seedance-video`, `veo` : vidéo générative payante, hors besoin immédiat ; utilisables plus tard pour des ambiances abstraites uniquement.
 - `wacli`, `voice-tts`, `telegram-send`, `reel` : spécifiques à un autre environnement (macOS, autre agent).

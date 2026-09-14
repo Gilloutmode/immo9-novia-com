@@ -66,7 +66,7 @@ def main():
     for pat in AI_FORMULAS:
         if re.search(pat, low):
             fails.append("formule creuse ou IA : /%s/" % pat)
-    if "—" in text or "–" in text:
+    if "\u2014" in text or "\u2013" in text:  # tiret long, demi-cadratin
         fails.append("tiret long ou demi-cadratin présent (à remplacer par une virgule, un point ou deux points)")
     if not args.allow_tutoiement:
         for pat in TUTOIEMENT:

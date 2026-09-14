@@ -1,4 +1,4 @@
-# LINES.md — Lignes rouges d'IMMO9
+# LINES.md : Lignes rouges d'IMMO9
 
 > Ce fichier a préséance sur toute idée, tout format, tout brief. Une pièce qui touche une ligne rouge est abandonnée, pas retravaillée. Les lignes sectorielles sont posées d'avance ; les lignes propres à IMMO9 sont remplies à l'**acte 3** de l'onboarding, avec David.
 
@@ -11,7 +11,7 @@
 - Conseil fiscal ou juridique individualisé.
 
 ## Jamais public (propre à IMMO9)
-`[À REMPLIR — acte 3, avec David : partenaires à ne pas nommer, programmes sous embargo, sujets internes, personnes de l'équipe qui ne veulent pas apparaître]`
+`[À REMPLIR : acte 3, avec David : partenaires à ne pas nommer, programmes sous embargo, sujets internes, personnes de l'équipe qui ne veulent pas apparaître]`
 
 ## Autorisé seulement avec accord préalable
 - Nommer un concurrent (faits publics uniquement, accord de David).
@@ -19,7 +19,7 @@
 - Publier un témoignage client : accord écrit conservé par l'équipe.
 - Montrer une personne de l'équipe en photo ou vidéo : accord de la personne.
 - Prendre position sur une actualité politique ou réglementaire en débat : décision de David.
-- `[À REMPLIR — acte 3]`
+- `[À REMPLIR : acte 3]`
 
 ## Personnes tierces
 Aucune personne réelle identifiable n'est citée, décrite ni mise en scène sans son accord. Les visuels générés ne représentent jamais une personne réelle.
@@ -33,7 +33,7 @@ Aucune personne réelle identifiable n'est citée, décrite ni mise en scène sa
 - Humour sur le logement, la précarité, les difficultés d'accès à la propriété.
 - Actualité politique, religieuse, géopolitique.
 - Comparaisons entre villes ou quartiers qui stigmatisent.
-- `[À REMPLIR — acte 3]`
+- `[À REMPLIR : acte 3]`
 
 ## Vérité et attribution (non négociable)
 - Aucune expérience, émotion ou intention en première personne n'est inventée pour l'équipe ou pour un client.

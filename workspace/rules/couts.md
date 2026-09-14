@@ -1,4 +1,4 @@
-# rules/couts.md — Savoir avant de dépenser
+# rules/couts.md : Savoir avant de dépenser
 
 ## Principe
 L'équipe n'exige pas le coût zéro : elle exige de savoir avant ce qui sera dépensé, pourquoi, et jusqu'où. Les plafonds vivent dans `doctrine/STUDIO_CONTRACT.json` (`budget`). Un prix mémorisé n'est jamais une autorisation.

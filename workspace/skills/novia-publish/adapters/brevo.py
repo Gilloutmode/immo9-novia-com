@@ -37,4 +37,5 @@ def publish(channel, settings, caption, assets, manifest):
     cid = res.get("id")
     if settings.get("send") and cid:
         request_json("POST", "%s/emailCampaigns/%s/sendNow" % (BASE, cid), headers={"api-key": key}, data={})
-    return {"id": cid, "url": None, "message": "campagne Brevo %s (%s)" % (cid, "envoyée" if settings.get("send") else "brouillon")}
+    return {"state": "published" if settings.get("send") and cid else "draft_remote", "id": cid, "url": None,
+            "message": "campagne Brevo %s (%s)" % (cid, "envoyée" if settings.get("send") else "brouillon à envoyer depuis Brevo")}

@@ -19,9 +19,9 @@ def checks(ws):
     tokens = read_json(ws / "templates" / "_tokens.json", {}) or {}
     out.append((bool(tokens.get("color_primary")) and bool(tokens.get("font_title")), "templates/_tokens.json : couleur primaire et police de titre"))
     voice = (ws / "doctrine" / "VOICE.md").read_text(encoding="utf-8")
-    out.append(("[À REMPLIR — acte 2]" not in voice.split("## Lexique")[0], "doctrine/VOICE.md : corpus, rythme, ouvertures, finitions remplis"))
+    out.append(("[À REMPLIR" not in voice.split("## Anti-patterns")[0], "doctrine/VOICE.md : corpus, rythme, ouvertures, finitions, lexique et registres remplis"))
     lines = (ws / "doctrine" / "LINES.md").read_text(encoding="utf-8")
-    out.append(("[À REMPLIR — acte 3, avec David" not in lines, "doctrine/LINES.md : section « Jamais public (propre à IMMO9) » remplie"))
+    out.append(("[À REMPLIR : acte 3, avec David" not in lines, "doctrine/LINES.md : section « Jamais public (propre à IMMO9) » remplie"))
     team = (ws / "TEAM.md").read_text(encoding="utf-8")
     out.append((len(re.findall(r"\[À REMPLIR\]", team)) <= 1, "TEAM.md : identifiants Telegram renseignés"))
     taste = ws / "learning" / "TASTE.md"
@@ -38,7 +38,9 @@ def main():
     contract = load_contract(ws)
     acts = contract.get("onboarding", {}).get("acts", [])
     path = ws / "state" / "onboarding.json"
-    state = read_json(path, {"status": acts[0] if acts else "act0_diagnostic", "history": []})
+    state = read_json(path, None)
+    if state is None:
+        state = read_json(ws / "state" / "onboarding.json.example", {"status": acts[0] if acts else "act0_diagnostic", "history": []})
     if args.check or args.set_status == "complete":
         results = checks(ws)
         for ok, label in results:
@@ -47,7 +49,7 @@ def main():
             sys.exit("REFUS : conditions manquantes, l'onboarding reste en %s" % state["status"])
         if args.check and not args.set_status:
             print("statut actuel : %s" % state["status"])
-            return
+            sys.exit(0 if all(ok for ok, _ in results) else 1)
     if args.set_status:
         if args.set_status not in acts:
             sys.exit("statut inconnu : %s (attendus : %s)" % (args.set_status, ", ".join(acts)))
